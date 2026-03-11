@@ -36,7 +36,36 @@ cd stock-monitor-system
 pip install -r requirements.txt
 ```
 
-### 3. 配置股票
+### 3. 配置飞书推送
+
+复制配置模板并填写你的飞书应用凭证：
+
+```bash
+cp feishu_config.example.json feishu_config.json
+```
+
+编辑 `feishu_config.json`：
+
+```json
+{
+  "feishu": {
+    "enabled": true,
+    "user_id": "YOUR_USER_ID",
+    "app_id": "YOUR_APP_ID",
+    "app_secret": "YOUR_APP_SECRET"
+  }
+}
+```
+
+**获取飞书凭证：**
+1. 访问 [飞书开放平台](https://open.feishu.cn/)
+2. 创建企业自建应用
+3. 获取 `app_id` 和 `app_secret`
+4. 在应用中添加用户 ID
+
+> ⚠️ **注意：** `feishu_config.json` 已加入 `.gitignore`，不会被提交到 Git，保护你的凭证安全。
+
+### 4. 配置股票
 
 编辑 `stocks_config.json`：
 
@@ -61,7 +90,7 @@ pip install -r requirements.txt
 }
 ```
 
-### 4. 启动服务
+### 5. 启动服务
 
 #### 方式 A: 多股票监控（命令行）
 ```bash
