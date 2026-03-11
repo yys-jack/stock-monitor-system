@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+
+# 日志
+*.log
+logs/
+
+# 数据
+data/*.db
+output/*.txt
+
+# 敏感配置（包含飞书凭证）
+feishu_config.json
+*.local.json
+secrets.json
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统
+.DS_Store
+Thumbs.db

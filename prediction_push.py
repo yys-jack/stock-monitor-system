@@ -12,19 +12,48 @@ from pathlib import Path
 from stock_predictor import StockPredictor
 
 # 配置
+CONFIG_FILE = Path(__file__).parent / "feishu_config.json"
+STOCK_CONFIG = Path(__file__).parent / "stocks_config.json"
+
+def load_feishu_config() -> dict:
+    """加载飞书配置文件"""
+    if not CONFIG_FILE.exists():
+        return {
+            "enabled": False,
+            "user_id": "",
+            "app_id": "",
+            "app_secret": "",
+            "retry_times": 3,
+            "retry_delay": 2
+        }
+    
+    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+        return config.get('feishu', {})
+
+def load_stock_config() -> dict:
+    """加载股票配置"""
+    if not STOCK_CONFIG.exists():
+        return {"stock_code": "000063", "stock_name": "中兴通讯"}
+    
+    with open(STOCK_CONFIG, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+        stocks = config.get('stocks', [])
+        if stocks:
+            return stocks[0]  # 返回第一只股票
+        return {"stock_code": "000063", "stock_name": "中兴通讯"}
+
+# 加载配置
+FEISHU_CONFIG = load_feishu_config()
+STOCK_INFO = load_stock_config()
+
+# 配置
 CONFIG = {
-    "stock_code": "000063",
-    "stock_name": "中兴通讯",
+    "stock_code": STOCK_INFO.get('code', '000063'),
+    "stock_name": STOCK_INFO.get('name', '中兴通讯'),
     
     # 飞书配置
-    "feishu": {
-        "enabled": True,
-        "user_id": "ou_02e3153454246dd33432d6a00d3db941",
-        "app_id": "cli_a927c1dca5b81cb6",
-        "app_secret": "hqIwARj5n11Yy4WEeqVnic5GViL4zDTs",
-        "retry_times": 3,
-        "retry_delay": 2,
-    },
+    "feishu": FEISHU_CONFIG,
     
     # 推送时间（每个交易日 15:30 推送，收盘后）
     "push_time": "15:30",

@@ -13,17 +13,28 @@ from typing import List, Dict, Optional
 
 # 配置
 CONFIG_FILE = Path(__file__).parent / "stocks_config.json"
+FEISHU_CONFIG_FILE = Path(__file__).parent / "feishu_config.json"
 OUTPUT_DIR = Path(__file__).parent / "output"
 
+def load_feishu_config() -> dict:
+    """加载飞书配置文件"""
+    if not FEISHU_CONFIG_FILE.exists():
+        print(f"[ERROR] 飞书配置文件不存在：{FEISHU_CONFIG_FILE}")
+        return {
+            "enabled": False,
+            "user_id": "",
+            "app_id": "",
+            "app_secret": "",
+            "retry_times": 3,
+            "retry_delay": 2
+        }
+    
+    with open(FEISHU_CONFIG_FILE, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+        return config.get('feishu', {})
+
 # 飞书配置
-FEISHU_CONFIG = {
-    "enabled": True,
-    "user_id": "ou_02e3153454246dd33432d6a00d3db941",
-    "app_id": "cli_a927c1dca5b81cb6",
-    "app_secret": "hqIwARj5n11Yy4WEeqVnic5GViL4zDTs",
-    "retry_times": 3,  # 推送失败重试次数
-    "retry_delay": 2,  # 重试间隔（秒）
-}
+FEISHU_CONFIG = load_feishu_config()
 
 def load_stocks_config() -> dict:
     """加载股票配置文件"""

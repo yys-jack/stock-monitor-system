@@ -11,27 +11,65 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+# ==================== 配置文件路径 ====================
+
+CONFIG_FILE = Path(__file__).parent / "stocks_config.json"
+FEISHU_CONFIG_FILE = Path(__file__).parent / "feishu_config.json"
+
+# ==================== 加载配置 ====================
+
+def load_feishu_config() -> dict:
+    """加载飞书配置文件"""
+    if not FEISHU_CONFIG_FILE.exists():
+        return {
+            "enabled": False,
+            "user_id": "",
+            "app_id": "",
+            "app_secret": "",
+            "retry_times": 3,
+            "retry_delay": 2
+        }
+    
+    with open(FEISHU_CONFIG_FILE, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+        return config.get('feishu', {})
+
+def load_stock_config() -> dict:
+    """加载股票配置"""
+    if not CONFIG_FILE.exists():
+        return {
+            "stocks": [{"code": "000063", "name": "中兴通讯", "market": "sz"}],
+            "settings": {"alert_threshold_up": 5.0, "alert_threshold_down": -5.0}
+        }
+    
+    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+# 加载配置
+stocks_config = load_stock_config()
+feishu_config = load_feishu_config()
+
+# 获取第一只启用的股票
+enabled_stocks = [s for s in stocks_config.get('stocks', []) if s.get('enabled', True)]
+stock_info = enabled_stocks[0] if enabled_stocks else {"code": "000063", "name": "中兴通讯", "market": "sz"}
+settings = stocks_config.get('settings', {})
+
 # ==================== 配置区域 ====================
 
 CONFIG = {
-    "stock_code": "000063",
-    "stock_name": "中兴通讯",
-    "market": "sz",
+    "stock_code": stock_info.get('code', '000063'),
+    "stock_name": stock_info.get('name', '中兴通讯'),
+    "market": stock_info.get('market', 'sz'),
     
     # 预警阈值（百分比）
-    "threshold_up": 5.0,       # 上涨超过 5% 预警
-    "threshold_down": -5.0,    # 下跌超过 5% 预警
+    "threshold_up": settings.get('alert_threshold_up', 5.0),
+    "threshold_down": settings.get('alert_threshold_down', -5.0),
     
     # 飞书配置
-    "feishu": {
-        "enabled": True,
-        "user_id": "ou_02e3153454246dd33432d6a00d3db941",
-        "app_id": "cli_a927c1dca5b81cb6",
-        "app_secret": "hqIwARj5n11Yy4WEeqVnic5GViL4zDTs",
-    },
+    "feishu": feishu_config,
     
     # 数据目录
-    "data_dir": Path.home() / ".openclaw" / "workspace-jerry" / "scripts" / "data",
+    "data_dir": Path(__file__).parent / "data",
 }
 
 # ==================== 数据获取 ====================
