@@ -1,6 +1,10 @@
 # 📈 股票监控系统
 
-> 中兴通讯 (000063) 及多股票监控解决方案 | 实时股价 + 公告新闻 + Web 界面 + 飞书推送
+> **Stock Monitor System** - 实时股价监控 + 智能预测 + Web 界面 + 飞书推送
+
+[![GitHub](https://img.shields.io/github/license/yys-jack/stock-monitor-system)](https://github.com/yys-jack/stock-monitor-system)
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Status](https://img.shields.io/badge/status-stable-green)](https://github.com/yys-jack/stock-monitor-system)
 
 ---
 
@@ -8,113 +12,33 @@
 
 | 模块 | 功能 | 状态 |
 |------|------|------|
-| 📊 **单股监控** | 中兴通讯完整监控（行情 + 公告 + 新闻 + 研报 + 财务） | ✅ 就绪 |
-| 📈 **多股监控** | 批量监控多只股票，支持配置管理 | ✅ 就绪 |
-| ⏰ **股价提醒** | 交易时间每 30 分钟推送实时股价 | ✅ 就绪 |
-| 🌐 **Web 界面** | 实时股价、新闻资讯、历史走势图表 | ✅ 就绪 |
+| 📊 **多股票监控** | 批量监控多只股票，支持配置管理 | ✅ 就绪 |
+| ⏰ **定时推送** | 交易时间每 30 分钟推送实时股价 | ✅ 就绪 |
+| 🔮 **智能预测** | 技术指标分析 + 趋势预测（MA/MACD/RSI/KDJ） | ✅ 就绪 |
+| 🌐 **Web 界面** | 实时股价、新闻资讯、历史走势图表、股票配置管理 | ✅ 就绪 |
+| 📬 **飞书推送** | 股价提醒 + 预测报告自动推送到飞书 | ✅ 就绪 |
+| ⚠️ **异常预警** | 涨跌幅超阈值即时通知（±5%） | ✅ 就绪 |
 
 ---
 
 ## 🚀 快速开始
 
-### 1. 安装依赖
+### 1. 克隆项目
 
 ```bash
-cd ~/.openclaw/workspace-jerry/scripts
+git clone https://github.com/yys-jack/stock-monitor-system.git
+cd stock-monitor-system
+```
+
+### 2. 安装依赖
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. 选择使用方式
+### 3. 配置股票
 
-#### 方式 A: 单股完整监控（中兴通讯）
-```bash
-python3 zte_monitor.py
-```
-
-#### 方式 B: 多股票批量监控
-```bash
-# 先配置 stocks_config.json
-python3 multi_stocks_monitor.py
-```
-
-#### 方式 C: 仅股价提醒
-```bash
-python3 stock_price_alert.py
-```
-
-#### 方式 D: Web 界面
-```bash
-bash start_web.sh
-# 访问 http://localhost:5000
-```
-
----
-
-## 📁 文件结构
-
-```
-scripts/
-├── 核心脚本
-│   ├── zte_monitor.py           # 单股完整监控（中兴通讯）
-│   ├── multi_stocks_monitor.py  # 多股票批量监控
-│   ├── stock_price_alert.py     # 股价实时提醒
-│   └── web_server.py            # Web 界面服务器
-│
-├── 配置文件
-│   ├── stocks_config.json       # 多股票配置
-│   └── requirements.txt         # Python 依赖
-│
-├── Web 界面
-│   ├── templates/
-│   │   └── index.html           # 前端页面
-│   └── start_web.sh             # 启动脚本
-│
-├── 数据存储
-│   ├── data/
-│   │   └── zte_monitor.db       # SQLite 数据库
-│   ├── logs/                    # 运行日志
-│   └── output/                  # 推送消息输出
-│
-└── 文档
-    └── README.md                # 本文件
-```
-
----
-
-## 📊 数据源状态
-
-| 数据类型 | 数据源 | 状态 |
-|---------|--------|------|
-| 📈 **行情** | 腾讯财经 | ✅ **真实数据** |
-| 📄 **公告** | 东方财富/巨潮资讯网 | 🔶 模拟数据 |
-| 📰 **新闻** | 东方财富搜索 API | 🔶 模拟数据 |
-| 🔬 **研报** | 模拟数据 | 🔶 框架就绪 |
-| 📊 **财务** | 模拟数据 | 🔶 框架就绪 |
-
----
-
-## 📋 模块详解
-
-### 1️⃣ 单股完整监控 (`zte_monitor.py`)
-
-**功能：** 中兴通讯全方位监控
-
-**输出内容：**
-- 📈 实时行情（昨收、开盘、当前价、涨跌、成交量）
-- 📄 新增公告
-- 📰 重要新闻
-- 🔬 券商研报
-- 📊 财务摘要
-
-**配置：** 编辑 `zte_monitor.py` 顶部 `CONFIG` 字典
-
----
-
-### 2️⃣ 多股票监控 (`multi_stocks_monitor.py`)
-
-**功能：** 批量监控多只股票
-
-**配置文件：** `stocks_config.json`
+编辑 `stocks_config.json`：
 
 ```json
 {
@@ -126,179 +50,356 @@ scripts/
       "enabled": true,
       "alias": "ZTE",
       "notes": "5G 通信设备龙头"
-    },
-    {
-      "code": "000001",
-      "name": "平安银行",
-      "market": "sz",
-      "enabled": true
     }
   ],
   "settings": {
     "push_interval_minutes": 30,
+    "alert_threshold_up": 5.0,
+    "alert_threshold_down": -5.0,
     "push_format": "single"
   }
 }
 ```
 
-**推送格式：**
-- `single`: 每只股票独立消息
-- `combined`: 所有股票合并为一条消息
+### 4. 启动服务
+
+#### 方式 A: 多股票监控（命令行）
+```bash
+python3 multi_stocks_monitor.py
+```
+
+#### 方式 B: Web 界面（推荐）
+```bash
+python3 web_server.py
+# 访问 http://localhost:5000
+```
+
+#### 方式 C: 预测推送
+```bash
+python3 prediction_push.py
+```
 
 ---
 
-### 3️⃣ 股价实时提醒 (`stock_price_alert.py`)
+## 📁 项目结构
 
-**功能：** 交易时间定时推送股价
+```
+stock-monitor-system/
+├── 📄 核心脚本
+│   ├── multi_stocks_monitor.py    # 多股票监控主脚本
+│   ├── price_alert_monitor.py     # 股价异常预警
+│   ├── prediction_push.py         # 预测推送（新增）
+│   └── stock_predictor.py         # 股票预测器
+│
+├── 🌐 Web 界面
+│   ├── web_server.py              # Flask 后端
+│   └── templates/
+│       └── index.html             # 前端页面（带股票配置管理）
+│
+├── ⚙️ 配置
+│   ├── stocks_config.json         # 股票配置
+│   ├── requirements.txt           # Python 依赖
+│   └── install_alert_cron.sh      # Cron 安装脚本
+│
+├── 📚 文档
+│   ├── README.md                  # 使用说明
+│   ├── ROADMAP.md                 # 版本路线图
+│   ├── SPRINT_3_PLAN.md           # Sprint 3 计划
+│   ├── SPRINT_REPORTS.md          # Sprint 报告汇总
+│   └── PREDICTION_REAL_DATA_REPORT.md  # 预测数据验证
+│
+└── 📊 数据目录
+    ├── data/                      # 数据库文件
+    ├── logs/                      # 日志文件
+    └── output/                    # 输出文件
+```
 
-**推送时间（交易日）：**
-| 时段 | 时间点 |
-|------|--------|
-| 上午 | 9:30, 10:00, 10:30, 11:00, 11:30 |
-| 下午 | 13:00, 13:30, 14:00, 14:30, 15:00 |
+---
 
-**配置：** 通过 OpenClaw cron 定时任务调度
+## 📊 核心功能详解
+
+### 1️⃣ 多股票监控 (`multi_stocks_monitor.py`)
+
+**功能：** 批量监控多只股票，获取实时股价并推送
+
+**特性：**
+- ✅ 支持多股票配置管理
+- ✅ 每只股票可独立启用/禁用
+- ✅ 交易时间判断（非交易时间自动跳过）
+- ✅ 推送失败重试机制（3 次）
+- ✅ 单条/合并推送模式
+
+**运行：**
+```bash
+python3 multi_stocks_monitor.py
+```
+
+**输出：**
+- 飞书消息推送
+- `output/stock_<code>.txt` 消息文件
+
+---
+
+### 2️⃣ 股价异常预警 (`price_alert_monitor.py`)
+
+**功能：** 监控股价涨跌幅，超过阈值时即时推送
+
+**特性：**
+- ✅ 可配置涨跌阈值（默认 ±5%）
+- ✅ 交易时间每 5 分钟检查
+- ✅ 飞书即时通知
+
+**安装 Cron：**
+```bash
+./install_alert_cron.sh install
+```
+
+**命令：**
+```bash
+./install_alert_cron.sh install    # 安装定时任务
+./install_alert_cron.sh status     # 查看状态
+./install_alert_cron.sh test       # 测试执行
+./install_alert_cron.sh uninstall  # 卸载任务
+```
+
+---
+
+### 3️⃣ 智能预测推送 (`prediction_push.py` + `stock_predictor.py`)
+
+**功能：** 生成股票预测报告，包含技术指标和趋势预测
+
+**技术指标：**
+- 📈 均线系统（MA5/10/20/60）
+- 📊 MACD（指数平滑异同移动平均线）
+- 📉 RSI（相对强弱指标）
+- 📐 KDJ（随机指标）
+- 📏 布林带（Bollinger Bands）
+
+**预测结果：**
+- 🔮 趋势预测（买入/卖出/观望）
+- 📊 置信度评估
+- 📈 支撑位/压力位
+- 📅 未来 5 日价格预测
+
+**运行：**
+```bash
+python3 prediction_push.py
+```
+
+**推送时间：** 每个交易日 15:30（收盘后）
 
 ---
 
 ### 4️⃣ Web 界面 (`web_server.py`)
 
-**功能：** 浏览器访问的监控面板
+**功能：** 浏览器访问的股票监控面板
 
 **特性：**
-- ✅ 实时股价（30 秒自动刷新）
+- ✅ 实时股价（支持多股票切换）
 - ✅ 新闻资讯列表
-- ✅ 历史走势图表（Chart.js）
-- ✅ 多股票切换
+- ✅ 历史走势图表（Chart.js K 线图）
+- ✅ 预测数据展示
+- ✅ ⚙️ **股票配置管理**（添加/删除/启用/禁用）
 - ✅ 响应式设计（手机/电脑适配）
 
 **启动：**
 ```bash
-bash start_web.sh
-# 访问 http://localhost:5000
+python3 web_server.py
 ```
 
+**访问：** http://localhost:5000
+
 **API 接口：**
-```bash
-GET /api/stock/<code>      # 实时股价
-GET /api/news/<code>       # 新闻列表
-GET /api/history/<code>    # 历史行情
-GET /api/overview          # 市场概览
-```
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/stock/<code>` | GET | 获取股票实时数据 |
+| `/api/news/<code>` | GET | 获取新闻列表 |
+| `/api/history/<code>` | GET | 获取历史行情 |
+| `/api/overview` | GET | 获取市场概览 |
+| `/api/stocks` | GET | 获取股票配置列表 |
+| `/api/stocks` | POST | 添加股票 |
+| `/api/stocks/<code>` | DELETE | 删除股票 |
+| `/api/stocks/<code>/toggle` | POST | 切换启用状态 |
+| `/api/predict/<code>` | GET | 获取预测数据 |
 
 ---
 
 ## ⚙️ 定时任务配置
 
-### 方式 A: OpenClaw Cron
+### 方式 A: 使用安装脚本（推荐）
 
-编辑 `~/.openclaw/cron/jobs.json`：
-
-```json
-{
-  "id": "multi-stocks",
-  "name": "多股票监控",
-  "schedule": {
-    "type": "cron",
-    "expressions": [
-      "30 9 * * 1-5",
-      "0 10 * * 1-5",
-      "30 10 * * 1-5",
-      "0 11 * * 1-5",
-      "30 11 * * 1-5",
-      "0 13 * * 1-5",
-      "30 13 * * 1-5",
-      "0 14 * * 1-5",
-      "30 14 * * 1-5",
-      "0 15 * * 1-5"
-    ],
-    "timezone": "Asia/Shanghai"
-  },
-  "command": ["python3", "~/.openclaw/workspace-jerry/scripts/multi_stocks_monitor.py"]
-}
+```bash
+cd stock-monitor-system
+./install_alert_cron.sh install
 ```
 
-### 方式 B: 系统 Cron
+### 方式 B: 手动配置 Cron
 
 ```bash
 crontab -e
-# 添加定时任务
+```
+
+添加以下内容：
+
+```bash
+# 多股票监控 - 交易时间每 30 分钟推送
+30 9 * * 1-5 python3 /path/to/multi_stocks_monitor.py
+0 10,11 * * 1-5 python3 /path/to/multi_stocks_monitor.py
+0,30 13,14 * * 1-5 python3 /path/to/multi_stocks_monitor.py
+0 15 * * 1-5 python3 /path/to/multi_stocks_monitor.py
+
+# 股价预警 - 交易时间每 5 分钟检查
+*/5 9-11 * * 1-5 python3 /path/to/price_alert_monitor.py
+*/5 13-14 * * 1-5 python3 /path/to/price_alert_monitor.py
+0-5/5 15 * * 1-5 python3 /path/to/price_alert_monitor.py
+
+# 预测推送 - 每个交易日 15:30（收盘后）
+30 15 * * 1-5 python3 /path/to/prediction_push.py
 ```
 
 ---
 
-## 📬 飞书推送
+## 📬 飞书推送配置
 
-### 方式 1: OpenClaw 内置（默认）
+### 配置飞书应用
 
-消息输出到 `output/` 目录，由 OpenClaw 自动推送到飞书。
+1. 访问 [飞书开放平台](https://open.feishu.cn/)
+2. 创建企业自建应用
+3. 获取 `app_id` 和 `app_secret`
+4. 在 `stocks_config.json` 或脚本中配置
 
-### 方式 2: 直接 Webhook
+### 推送格式
 
-1. 在飞书群添加机器人
-2. 获取 webhook URL
-3. 配置到对应脚本的 `CONFIG` 中
+**股价提醒：**
+```
+📈【中兴通讯 000063】股价提醒
+🏷️ 别名：ZTE
+⏰ 时间：2026-03-11 15:30
+
+💹 实时股价
+  当前价：37.12 元 (+0.68%)
+  涨跌额：+0.25 元
+  
+📊 今日行情
+  昨收：36.87 元
+  开盘：37.00 元
+  最高：37.90 元
+  最低：36.99 元
+  成交量：1,135,850 手
+```
+
+**预测报告：**
+```
+🟡【中兴通讯 预测报告】
+📅 日期：2026-03-11
+
+💹 当前股价
+  收盘价：¥37.12
+  涨跌幅：+0.68%
+  
+📊 技术指标
+  MA5: ¥37.03 | MA10: ¥37.39
+  MACD: -0.62 | RSI: 49.8
+  
+🔮 趋势预测
+  信号：🟡 观望
+  置信度：中 (61.4%)
+  
+📈 关键价位
+  支撑位：¥35.70
+  压力位：¥38.76
+```
 
 ---
 
-## 🗄️ 数据存储
+## 📊 数据源
 
-**SQLite 数据库：** `data/zte_monitor.db`
-
-**数据表：**
-- `announcements` - 公告
-- `news` - 新闻
-- `market_data` - 行情数据
-- `reports` - 研报
-
-**特性：** 自动去重，避免重复推送
+| 数据类型 | 数据源 | 状态 |
+|---------|--------|------|
+| 📈 **行情** | 腾讯财经 | ✅ 真实数据 |
+| 📊 **历史行情** | AkShare | ✅ 真实数据 |
+| 📰 **新闻** | AkShare/东方财富 | ✅ 真实数据 |
+| 📄 **公告** | AkShare | ✅ 真实数据 |
+| 🔬 **研报** | AkShare | ✅ 真实数据 |
+| 📊 **财务** | AkShare | ✅ 真实数据 |
 
 ---
 
 ## 🛠️ 常用命令
 
 ```bash
-# 查看状态
-git status
-
-# 测试单股监控
-python3 zte_monitor.py
-
-# 测试多股监控
+# 测试多股票监控
 python3 multi_stocks_monitor.py
 
-# 测试股价提醒
-python3 stock_price_alert.py
+# 测试预测推送
+python3 prediction_push.py
 
 # 启动 Web 服务
-bash start_web.sh
+python3 web_server.py
+
+# 安装预警 Cron
+./install_alert_cron.sh install
 
 # 查看日志
 tail -f logs/multi_stocks.log
-tail -f logs/web_server.log
+tail -f logs/alert_cron.log
+tail -f logs/prediction.log
 
 # 查看推送消息
 cat output/stock_000063.txt
+cat output/prediction_000063.txt
+
+# Git 操作
+git status
+git add -A
+git commit -m "feat: 描述你的改动"
+git push origin main
 ```
+
+---
+
+## 📋 推送时间表（周一至周五）
+
+| 时间 | 类型 | 说明 |
+|------|------|------|
+| 9:30 | 股价推送 | 开盘推送 |
+| 10:00 | 股价推送 | 定时推送 |
+| 10:30 | - | - |
+| 11:00 | 股价推送 | 定时推送 |
+| 11:30 | - | - |
+| 13:00 | 股价推送 | 下午开盘 |
+| 13:30 | 股价推送 | 定时推送 |
+| 14:00 | 股价推送 | 定时推送 |
+| 14:30 | 股价推送 | 定时推送 |
+| 15:00 | 股价推送 | 收盘推送 |
+| 15:30 | **预测推送** | **每日预测报告** |
+
+**共 7 次股价推送 + 1 次预测推送/交易日**
 
 ---
 
 ## ⚠️ 注意事项
 
-1. **交易日** - 定时任务仅在周一至周五执行
+1. **交易时间** - 推送仅在交易日（周一至周五 9:30-15:00）执行
 2. **数据延迟** - 行情数据可能有 1-2 分钟延迟
-3. **API 变化** - 网站接口更新时需调整代码
-4. **robots.txt** - 控制请求频率，避免被封 IP
+3. **网络请求** - 确保服务器可访问外网
+4. **飞书配置** - 确保飞书应用权限正确
 5. **投资风险提示** - 数据仅供参考，不构成投资建议
 
 ---
 
 ## 📝 更新日志
 
+### v3.0 (2026-03-11) - Sprint 3
+- ✅ 多股票支持（配置文件管理）
+- ✅ 飞书推送优化（重试机制）
+- ✅ 股价预警 Cron 配置（一键安装脚本）
+- ✅ Web 界面股票配置管理（添加/删除/启用/禁用）
+- ✅ 预测推送功能（技术指标 + 趋势预测）
+
 ### v2.0 (2026-03-10)
 - ✅ 完整实现公告、新闻、研报、财务数据模块
 - ✅ 使用 SQLite 存储历史数据
-- ✅ 多股票监控功能
 - ✅ Web 界面上线
 - ✅ 股价实时提醒
 
@@ -311,15 +412,33 @@ cat output/stock_000063.txt
 ## 🎯 下一步计划
 
 ### 待扩展功能
-- [ ] 接入真实公告 API
-- [ ] 接入真实新闻 API
-- [ ] 接入真实研报/财务数据 API
+- [ ] 更多股票数据源接入
 - [ ] 重大事件实时预警
 - [ ] 邮件/短信通知
 - [ ] 数据可视化图表增强
 - [ ] 用户登录认证
 - [ ] 数据导出（CSV/Excel）
+- [ ] 移动端适配优化
+- [ ] 自动化测试
 
 ---
 
-🤖 **开发者:** Jerry | **最后更新:** 2026-03-11
+## 📄 许可证
+
+MIT License
+
+---
+
+## 👤 开发者
+
+- **开发:** Jerry
+- **产品:** Tom
+- **测试:** 派大星
+
+**GitHub:** https://github.com/yys-jack/stock-monitor-system
+
+**最后更新:** 2026-03-11
+
+---
+
+🤖 **有问题？欢迎提交 Issue 或 PR！**
