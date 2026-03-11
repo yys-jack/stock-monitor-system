@@ -1,0 +1,28 @@
+{
+  "version": 3,
+  "updated_at": "2026-03-11",
+  "stocks": [
+    {
+      "code": "000063",
+      "name": "中兴通讯",
+      "market": "sz",
+      "enabled": true,
+      "alias": "ZTE",
+      "notes": "5G 通信设备龙头"
+    }
+  ],
+  "settings": {
+    "push_interval_minutes": 30,
+    "alert_threshold_up": 5.0,
+    "alert_threshold_down": -5.0,
+    "push_format": "single",
+    "push_time_range": {
+      "morning_start": "09:30",
+      "morning_end": "11:30",
+      "afternoon_start": "13:00",
+      "afternoon_end": "15:00"
+    },
+    "retry_times": 3,
+    "retry_delay_seconds": 2
+  }
+}
