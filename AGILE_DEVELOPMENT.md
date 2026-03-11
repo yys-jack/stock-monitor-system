@@ -285,6 +285,51 @@ Sprint 3 (2026-03-11)
 
 ---
 
+## 🔧 配置管理
+
+### 飞书配置 (feishu_config.json)
+
+**创建时间：** 2026-03-11  
+**目的：** 集中管理飞书推送凭证，避免硬编码
+
+**配置内容：**
+```json
+{
+  "feishu": {
+    "enabled": true,
+    "user_id": "YOUR_USER_ID",
+    "app_id": "YOUR_APP_ID",
+    "app_secret": "YOUR_APP_SECRET",
+    "retry_times": 3,
+    "retry_delay_seconds": 2
+  },
+  "notification_settings": {
+    "stock_push": {"enabled": true, "format": "single"},
+    "price_alert": {"enabled": true, "threshold_up": 5.0, "threshold_down": -5.0},
+    "prediction_push": {"enabled": true, "schedule": "15:30"}
+  }
+}
+```
+
+**安全保护：**
+- ✅ 已加入 `.gitignore`，不会被提交到 Git
+- ✅ 提供模板文件 `feishu_config.example.json`
+- ✅ 所有脚本从配置文件读取凭证
+
+**修改的脚本：**
+- `multi_stocks_monitor.py` - 从配置文件加载
+- `prediction_push.py` - 从配置文件加载
+- `price_alert_monitor.py` - 从配置文件加载
+
+### 股票配置 (stocks_config.json)
+
+**配置内容：**
+- 股票列表（代码、名称、市场、启用状态）
+- 推送设置（频率、格式、重试次数）
+- 预警阈值（涨跌百分比）
+
+---
+
 ## 🐛 Bug 跟踪
 
 ### Bug 报告格式
