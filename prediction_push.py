@@ -9,7 +9,7 @@ import requests
 import json
 from datetime import datetime
 from pathlib import Path
-from stock_predictor import StockPredictor
+from typing import Optional, Dict
 
 # 配置
 CONFIG_FILE = Path(__file__).parent / "feishu_config.json"
@@ -59,65 +59,177 @@ CONFIG = {
     "push_time": "15:30",
 }
 
-def generate_prediction_report(stock_code: str) -> dict:
-    """生成预测报告"""
+def fetch_stock_price_tencent(code: str) -> Optional[Dict]:
+    """从腾讯财经获取股票实时数据（备用数据源）"""
     try:
+        # 确定市场前缀
+        if code.startswith('6'):
+            market = 'sh'
+        else:
+            market = 'sz'
+        
+        url = f"https://qt.gtimg.cn/q={market}{code}"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.encoding = "gbk"
+        
+        if resp.status_code != 200:
+            return None
+        
+        content = resp.text.strip()
+        if not content.startswith("v_"):
+            return None
+        
+        data_str = content.split("=\"")[1].rstrip("\";")
+        fields = data_str.split("~")
+        
+        if len(fields) < 35:
+            return None
+        
+        return {
+            "name": fields[1],
+            "code": fields[2],
+            "current": float(fields[3]) if fields[3] else 0,
+            "prev_close": float(fields[4]) if fields[4] else 0,
+            "open": float(fields[5]) if fields[5] else 0,
+            "volume": int(fields[6]) if fields[6] else 0,
+            "high": float(fields[33]) if fields[33] else 0,
+            "low": float(fields[34]) if fields[34] else 0,
+            "change_amt": float(fields[31]) if fields[31] else 0,
+            "change_pct": float(fields[32]) if fields[32] else 0,
+        }
+    except Exception as e:
+        print(f"[WARN] 腾讯数据源获取失败：{e}")
+        return None
+
+def generate_prediction_report(stock_code: str) -> dict:
+    """生成预测报告（带备用数据源）"""
+    # 首先尝试使用 akshare 获取完整数据
+    try:
+        from stock_predictor import StockPredictor
         predictor = StockPredictor(stock_code)
         
         # 获取数据
         df = predictor.fetch_history_data(days=60)
-        if df.empty:
-            return {"success": False, "error": "获取数据失败"}
+        if not df.empty:
+            # 计算指标
+            df = predictor.calculate_ma(df)
+            df = predictor.calculate_macd(df)
+            df = predictor.calculate_rsi(df)
+            df = predictor.calculate_kdj(df)
+            df = predictor.calculate_boll(df)
+            
+            # 趋势分析
+            trend_analysis = predictor.analyze_trend(df)
+            prediction = predictor.predict_price(df, days=5)
+            
+            # 获取最新数据
+            latest = df.iloc[-1]
+            
+            return {
+                "success": True,
+                "data": {
+                    "stock_code": stock_code,
+                    "stock_name": predictor.stock_name,
+                    "date": datetime.now().strftime('%Y-%m-%d'),
+                    "current_price": float(latest.get('收盘', 0)),
+                    "change_pct": float(latest.get('涨跌幅', 0)),
+                    "volume": int(latest.get('成交量', 0)),
+                    
+                    # 技术指标
+                    "ma5": float(latest.get('MA5', 0)),
+                    "ma10": float(latest.get('MA10', 0)),
+                    "ma20": float(latest.get('MA20', 0)),
+                    "macd": float(latest.get('MACD', 0)),
+                    "rsi": float(latest.get('RSI', 0)),
+                    "kdj_k": float(latest.get('K', 0)),
+                    "kdj_d": float(latest.get('D', 0)),
+                    
+                    # 预测结果
+                    "signal": trend_analysis.get('overall_signal', '中性'),
+                    "trend": trend_analysis.get('trend', '震荡'),
+                    "confidence": prediction.get('confidence', 0),
+                    "predicted_change": prediction.get('change_pct', 0),
+                    "support_level": prediction.get('support', 0),
+                    "pressure_level": prediction.get('resistance', 0),
+                },
+                "source": "akshare"
+            }
+    except Exception as e:
+        print(f"[WARN] akshare 数据源失败：{e}")
+    
+    # 备用方案：使用腾讯数据源生成简化报告
+    print("[INFO] 使用备用数据源（腾讯财经）生成简化报告...")
+    tencent_data = fetch_stock_price_tencent(stock_code)
+    
+    if tencent_data:
+        # 基于当前价格和简单规则生成预测
+        current = tencent_data['current']
+        change_pct = tencent_data['change_pct']
         
-        # 计算指标
-        df = predictor.calculate_ma(df)
-        df = predictor.calculate_macd(df)
-        df = predictor.calculate_rsi(df)
-        df = predictor.calculate_kdj(df)
-        df = predictor.calculate_boll(df)
+        # 简单趋势判断
+        if change_pct > 3:
+            signal = "买入"
+            trend = "强势上涨"
+            confidence = 65
+        elif change_pct > 1:
+            signal = "观望"
+            trend = "温和上涨"
+            confidence = 50
+        elif change_pct < -3:
+            signal = "卖出"
+            trend = "强势下跌"
+            confidence = 65
+        elif change_pct < -1:
+            signal = "观望"
+            trend = "温和下跌"
+            confidence = 50
+        else:
+            signal = "观望"
+            trend = "震荡"
+            confidence = 45
         
-        # 趋势分析
-        trend_analysis = predictor.analyze_trend(df)
-        prediction = predictor.predict_price(df, days=5)
-        
-        # 获取最新数据
-        latest = df.iloc[-1]
-        prev = df.iloc[-2] if len(df) > 1 else latest
+        # 估算支撑/压力位
+        support = current * 0.97
+        pressure = current * 1.03
         
         return {
             "success": True,
             "data": {
                 "stock_code": stock_code,
-                "stock_name": predictor.stock_name,
+                "stock_name": tencent_data['name'],
                 "date": datetime.now().strftime('%Y-%m-%d'),
-                "current_price": float(latest.get('收盘', 0)),
-                "change_pct": float(latest.get('涨跌幅', 0)),
-                "volume": int(latest.get('成交量', 0)),
+                "current_price": current,
+                "change_pct": change_pct,
+                "volume": tencent_data['volume'],
                 
-                # 技术指标
-                "ma5": float(latest.get('MA5', 0)),
-                "ma10": float(latest.get('MA10', 0)),
-                "ma20": float(latest.get('MA20', 0)),
-                "macd": float(latest.get('MACD', 0)),
-                "rsi": float(latest.get('RSI', 0)),
-                "kdj_k": float(latest.get('K', 0)),
-                "kdj_d": float(latest.get('D', 0)),
+                # 技术指标（简化版）
+                "ma5": current,
+                "ma10": current,
+                "ma20": current,
+                "macd": 0,
+                "rsi": 50,
+                "kdj_k": 50,
+                "kdj_d": 50,
                 
                 # 预测结果
-                "signal": trend_analysis.get('overall_signal', '中性'),
-                "trend": trend_analysis.get('trend', '震荡'),
-                "confidence": prediction.get('confidence', 0),
-                "predicted_change": prediction.get('change_pct', 0),
-                "support_level": prediction.get('support', 0),
-                "pressure_level": prediction.get('pressure', 0),
-            }
+                "signal": signal,
+                "trend": trend,
+                "confidence": confidence,
+                "predicted_change": change_pct * 0.5,
+                "support_level": support,
+                "pressure_level": pressure,
+            },
+            "source": "tencent"
         }
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    
+    return {"success": False, "error": "所有数据源均不可用"}
 
 def format_prediction_message(report: dict) -> str:
     """格式化预测消息"""
     data = report['data']
+    source = report.get('source', 'akshare')
     
     # 信号图标
     signal = data['signal']
@@ -137,7 +249,10 @@ def format_prediction_message(report: dict) -> str:
     else:
         confidence_level = '低'
     
-    message = f"""{signal_icon}【{data['stock_name']} 预测报告】
+    # 数据源标识
+    source_tag = "🔄 简化版" if source == "tencent" else ""
+    
+    message = f"""{signal_icon}【{data['stock_name']} 预测报告】{source_tag}
 📅 日期：{data['date']}
 
 💹 当前股价
@@ -245,6 +360,8 @@ def main():
         return False
     
     data = report['data']
+    source = report.get('source', 'akshare')
+    print(f"[INFO] 数据源：{source}")
     print(f"[INFO] 当前股价：¥{data['current_price']:.2f} ({data['change_pct']:+.2f}%)")
     print(f"[INFO] 预测信号：{data['signal']} (置信度：{data['confidence']:.1f}%)")
     
