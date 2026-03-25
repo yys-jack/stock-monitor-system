@@ -9,6 +9,30 @@
       "enabled": true,
       "alias": "ZTE",
       "notes": "5G 通信设备龙头"
+    },
+    {
+      "code": "601899",
+      "name": "紫金矿业",
+      "market": "sh",
+      "enabled": true,
+      "alias": "",
+      "notes": ""
+    },
+    {
+      "code": "600416",
+      "name": "湘电股份",
+      "market": "sh",
+      "enabled": true,
+      "alias": "",
+      "notes": ""
+    },
+    {
+      "code": "002241",
+      "name": "歌尔股份",
+      "market": "sz",
+      "enabled": true,
+      "alias": "",
+      "notes": ""
     }
   ],
   "settings": {
