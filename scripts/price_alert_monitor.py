@@ -13,8 +13,9 @@ from pathlib import Path
 
 # ==================== 配置文件路径 ====================
 
-CONFIG_FILE = Path(__file__).parent / "stocks_config.json"
-FEISHU_CONFIG_FILE = Path(__file__).parent / "feishu_config.json"
+PROJECT_ROOT = Path(__file__).parent.parent
+CONFIG_FILE = PROJECT_ROOT / "config" / "stocks_config.json"
+FEISHU_CONFIG_FILE = PROJECT_ROOT / "config" / "feishu_config.json"
 
 # ==================== 加载配置 ====================
 

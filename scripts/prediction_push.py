@@ -12,8 +12,9 @@ from pathlib import Path
 from typing import Optional, Dict
 
 # 配置
-CONFIG_FILE = Path(__file__).parent / "feishu_config.json"
-STOCK_CONFIG = Path(__file__).parent / "stocks_config.json"
+PROJECT_ROOT = Path(__file__).parent.parent
+CONFIG_FILE = PROJECT_ROOT / "config" / "feishu_config.json"
+STOCK_CONFIG = PROJECT_ROOT / "config" / "stocks_config.json"
 
 def load_feishu_config() -> dict:
     """加载飞书配置文件"""

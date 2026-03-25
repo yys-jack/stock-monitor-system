@@ -93,20 +93,25 @@ cp feishu_config.example.json feishu_config.json
 
 ### 5. 启动服务
 
-#### 方式 A: 多股票监控（命令行）
+#### 方式 A: Web 界面（推荐）⭐
 ```bash
-python3 multi_stocks_monitor.py
+python3 app.py
+# 访问 http://localhost:5000
 ```
 
-#### 方式 B: Web 界面（推荐）
+#### 方式 B: 多股票监控（命令行）
 ```bash
-python3 web_server.py
-# 访问 http://localhost:5000
+python3 scripts/multi_stocks_monitor.py
 ```
 
 #### 方式 C: 预测推送
 ```bash
-python3 prediction_push.py
+python3 scripts/prediction_push.py
+```
+
+#### 方式 D: 黄金监控
+```bash
+python3 scripts/gold_monitor.py
 ```
 
 ---
@@ -115,36 +120,47 @@ python3 prediction_push.py
 
 ```
 stock-monitor-system/
-├── 📄 核心脚本
-│   ├── multi_stocks_monitor.py    # 多股票监控主脚本
-│   ├── gold_monitor.py            # 黄金价格监控（新增）
+├── 🌐 Web 应用 (Flask)
+│   ├── app.py                     # 应用入口 ⭐
+│   └── webapp/                    # Flask 应用包
+│       ├── __init__.py
+│       ├── routes/                # 路由模块
+│       │   ├── api.py             # API 路由 (/api/*)
+│       │   └── views.py           # 页面路由 (/)
+│       ├── services/              # 业务服务层
+│       │   ├── stock_service.py   # 股票服务
+│       │   ├── gold_service.py    # 黄金服务
+│       │   └── predictor.py       # 预测服务
+│       ├── utils/                 # 工具函数
+│       │   ├── config_loader.py   # 配置加载
+│       │   └── feishu.py          # 飞书推送
+│       └── templates/             # 模板文件
+│           └── index.html         # Web 界面
+│
+├── 📄 监控脚本 (scripts/)
+│   ├── multi_stocks_monitor.py    # 多股票监控
+│   ├── gold_monitor.py            # 黄金价格监控
 │   ├── price_alert_monitor.py     # 股价异常预警
-│   ├── prediction_push.py         # 预测推送（新增）
-│   └── stock_predictor.py         # 股票预测器
+│   ├── prediction_push.py         # 预测推送
+│   └── stock_predictor.py         # 股票预测器（旧版）
 │
-├── 🌐 Web 界面
-│   ├── web_server.py              # Flask 后端
-│   └── templates/
-│       └── index.html             # 前端页面（带股票配置管理）
-│
-├── ⚙️ 配置
+├── ⚙️ 配置 (config/)
 │   ├── stocks_config.json         # 股票配置
-│   ├── gold_config.json           # 黄金配置（新增）
-│   ├── feishu_config.json         # 飞书推送配置
-│   ├── requirements.txt           # Python 依赖
-│   ├── install_alert_cron.sh      # 预警 Cron 安装脚本
-│   ├── install_push_cron.sh       # 股票推送 Cron 安装脚本
-│   └── install_gold_cron.sh       # 黄金监控 Cron 安装脚本（新增）
+│   ├── gold_config.json           # 黄金配置
+│   ├── feishu_config.json         # 飞书推送配置 ⚠️ 敏感
+│   └── feishu_config.example.json # 配置模板
 │
 ├── 📚 文档
 │   ├── README.md                  # 使用说明
-│   ├── ROADMAP.md                 # 版本路线图
-│   ├── TECH_STACK.md              # 技术栈文档 ⭐新增
+│   ├── TECH_STACK.md              # 技术栈文档 ⭐
 │   ├── AGILE_DEVELOPMENT.md       # 敏捷开发文档
 │   ├── GIT_WORKFLOW.md            # Git 工作流程
-│   ├── SPRINT_3_PLAN.md           # Sprint 3 计划
-│   ├── SPRINT_REPORTS.md          # Sprint 报告汇总
+│   ├── ROADMAP.md                 # 版本路线图
 │   └── PREDICTION_REAL_DATA_REPORT.md  # 预测数据验证
+│
+├── 🛠️ 运维脚本
+│   ├── cron_install.sh            # Cron 统一管理 ⭐
+│   └── install_alert_cron.sh      # 预警 Cron（旧版）
 │
 └── 📊 数据目录
     ├── data/                      # 数据库文件
@@ -451,28 +467,34 @@ crontab -e
 ## 🛠️ 常用命令
 
 ```bash
-# 测试多股票监控
-python3 multi_stocks_monitor.py
+# 🌐 Web 服务
+python3 app.py                        # 启动 Web 界面
 
-# 测试预测推送
-python3 prediction_push.py
+# 📄 监控脚本
+python3 scripts/multi_stocks_monitor.py   # 多股票监控
+python3 scripts/gold_monitor.py           # 黄金监控
+python3 scripts/prediction_push.py        # 预测推送
+python3 scripts/price_alert_monitor.py    # 股价预警
 
-# 启动 Web 服务
-python3 web_server.py
+# 🛠️ Cron 管理
+./cron_install.sh install             # 安装所有任务
+./cron_install.sh status              # 查看状态
+./cron_install.sh uninstall           # 卸载任务
 
-# 安装预警 Cron
-./install_alert_cron.sh install
+# 📊 日志查看
+tail -f logs/push_cron.log            # 股票推送日志
+tail -f logs/gold_cron.log            # 黄金监控日志
+tail -f logs/alert_cron.log           # 预警日志
 
-# 查看日志
-tail -f logs/multi_stocks.log
-tail -f logs/alert_cron.log
-tail -f logs/prediction.log
+# 📝 输出文件
+cat output/stock_000063.txt           # 查看股票推送
+cat output/gold_price.txt             # 查看黄金推送
 
-# 查看推送消息
-cat output/stock_000063.txt
-cat output/prediction_000063.txt
+# 🔧 配置编辑
+vim config/stocks_config.json         # 编辑股票配置
+vim config/feishu_config.json         # 编辑飞书配置
 
-# Git 操作
+# 📚 Git 操作
 git status
 git add -A
 git commit -m "feat: 描述你的改动"
