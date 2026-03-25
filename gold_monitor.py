@@ -38,25 +38,28 @@ def load_gold_config() -> dict:
 
 def fetch_gold_price() -> Optional[dict]:
     """
-    获取黄金价格（实时国内金价）
+    获取黄金价格（国内 + 国际实时金价）
     
     数据源说明:
     - 国内金价：上海期货交易所黄金期货主力合约（实时）
-    - 备用：COMEX 黄金期货（腾讯财经接口，国际参考）
+    - 国际金价：伦敦金 (XAU) + COMEX 黄金期货（通过 akshare 获取）
     
-    上期所黄金期货 (AU0/AU2606 等) 是实时交易的国内黄金价格，准确性高。
+    上期所黄金期货 (AU0) 是实时交易的国内黄金价格，准确性高。
+    伦敦金/COMEX 提供实时国际金价参考。
     """
-    # 方案 1: 获取上期所黄金期货实时行情（推荐）
+    import akshare as ak
+    
+    gold_data = {}
+    
+    # 方案 1: 获取上期所黄金期货实时行情（国内金价）
     try:
-        import akshare as ak
-        # 获取黄金期货实时行情
         df = ak.futures_zh_realtime(symbol="黄金")
         
         if len(df) > 0:
             # 优先使用黄金连续合约 (AU0) 或主力合约
             main_contract = df[df['symbol'] == 'AU0']
             if len(main_contract) == 0:
-                main_contract = df.iloc[0:1]  # 使用第一行（通常是主力）
+                main_contract = df.iloc[0:1]
             
             row = main_contract.iloc[0]
             current_cny_g = float(row.get('trade', 0))
@@ -64,92 +67,81 @@ def fetch_gold_price() -> Optional[dict]:
             change_pct = float(row.get('changepercent', 0))
             change_cny_g = current_cny_g - prev_settlement
             
-            # 估算国际金价（反向换算）
-            exchange_rate = 7.2
-            current_usd_oz = (current_cny_g * 31.1035) / exchange_rate
-            
-            return {
-                "name": "上期所黄金期货",
-                "code": "AU0",
+            gold_data.update({
+                "domestic_name": "上期所黄金期货",
+                "domestic_code": "AU0",
                 "current_cny_g": current_cny_g,
-                "current_usd_oz": current_usd_oz,
                 "prev_close_cny_g": prev_settlement,
-                "prev_close_usd_oz": (prev_settlement * 31.1035) / exchange_rate,
                 "change_cny_g": change_cny_g,
-                "change_usd_oz": change_cny_g * 31.1035 / exchange_rate,
                 "change_pct": change_pct,
-                "high_usd_oz": float(row.get('high', current_usd_oz * 1.01)),
-                "low_usd_oz": float(row.get('low', current_usd_oz * 0.99)),
-                "source": "SHFE",
-            }
+                "domestic_source": "SHFE",
+            })
     except Exception as e:
         print(f"[WARN] 获取上期所金价失败：{e}")
     
-    # 方案 2: 降级使用 COMEX 国际金价（腾讯财经）
+    # 方案 2: 获取国际金价（伦敦金 + COMEX）
     try:
-        url = "https://qt.gtimg.cn/q=hf_GC"
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept-Language": "zh-CN,zh;q=0.9",
-        }
+        # 伦敦金现货
+        df_xau = ak.futures_foreign_commodity_realtime(symbol="XAU")
+        if len(df_xau) > 0:
+            row = df_xau.iloc[0]
+            current_usd_oz = float(row.get('最新价', 0))
+            current_cny_g = float(row.get('人民币报价', 0))
+            change_usd = float(row.get('涨跌额', 0))
+            
+            gold_data.update({
+                "international_name": "伦敦金",
+                "international_code": "XAU",
+                "current_usd_oz": current_usd_oz,
+                "current_cny_g_intl": current_cny_g,
+                "change_usd_oz": change_usd,
+                "international_source": "伦敦金",
+            })
         
-        resp = requests.get(url, headers=headers, timeout=10)
-        resp.encoding = "gbk"
-        
-        if resp.status_code != 200:
-            return None
-        
-        content = resp.text.strip()
-        if not content.startswith("v_hf_GC="):
-            print(f"[WARN] 响应格式异常：{content[:50]}")
-            return None
-        
-        # 解析：v_hf_GC="4620.30,4.20,4618.80,4619.20,4633.40,4491.70,..."
-        data_str = content.split('="')[1].rstrip('";')
-        fields = data_str.split(",")
-        
-        if len(fields) < 6:
-            print(f"[WARN] 字段数量不足：{len(fields)}")
-            return None
-        
-        # 解析字段：当前价，涨跌，买价，卖价，最高，最低
-        current_usd_oz = float(fields[0]) if fields[0] else 0
-        change_usd = float(fields[1]) if fields[1] else 0
-        high_usd_oz = float(fields[4]) if fields[4] else 0
-        low_usd_oz = float(fields[5]) if fields[5] else 0
-        
-        # 转换为人民币/克（1 盎司≈31.1035 克，汇率≈7.2）
-        exchange_rate = 7.2
-        current_cny_g = (current_usd_oz * exchange_rate) / 31.1035
-        prev_close_usd = current_usd_oz - change_usd
-        prev_cny_g = (prev_close_usd * exchange_rate) / 31.1035
-        change_cny_g = current_cny_g - prev_cny_g
-        change_pct = (change_usd / prev_close_usd) * 100 if prev_close_usd else 0
-        
-        return {
-            "name": "COMEX 黄金期货",
-            "code": "GC",
-            "current_usd_oz": current_usd_oz,
-            "current_cny_g": current_cny_g,
-            "prev_close_usd_oz": prev_close_usd,
-            "prev_close_cny_g": prev_cny_g,
-            "change_usd_oz": change_usd,
-            "change_cny_g": change_cny_g,
-            "change_pct": change_pct,
-            "high_usd_oz": high_usd_oz,
-            "low_usd_oz": low_usd_oz,
-            "source": "COMEX",
-        }
+        # COMEX 黄金期货
+        df_gc = ak.futures_foreign_commodity_realtime(symbol="GC")
+        if len(df_gc) > 0:
+            row = df_gc.iloc[0]
+            current_usd_oz = float(row.get('最新价', 0))
+            current_cny_g = float(row.get('人民币报价', 0))
+            
+            gold_data.update({
+                "comex_name": "COMEX 黄金",
+                "comex_code": "GC",
+                "current_usd_oz_comex": current_usd_oz,
+                "current_cny_g_comex": current_cny_g,
+                "comex_source": "COMEX",
+            })
     except Exception as e:
-        print(f"[ERROR] 获取黄金价格失败：{e}")
-        import traceback
-        traceback.print_exc()
+        print(f"[WARN] 获取国际金价失败：{e}")
+    
+    # 检查是否获取到数据
+    if not gold_data:
         return None
+    
+    # 构建返回数据
+    return {
+        "name": gold_data.get('domestic_name', '黄金'),
+        "code": gold_data.get('domestic_code', 'AU0'),
+        "current_cny_g": gold_data.get('current_cny_g', 0),
+        "current_usd_oz": gold_data.get('current_usd_oz', gold_data.get('current_usd_oz_comex', 0)),
+        "prev_close_cny_g": gold_data.get('prev_close_cny_g', 0),
+        "prev_close_usd_oz": gold_data.get('prev_close_cny_g', 0) * 31.1035 / 7.2,
+        "change_cny_g": gold_data.get('change_cny_g', 0),
+        "change_usd_oz": gold_data.get('change_usd_oz', 0),
+        "change_pct": gold_data.get('change_pct', 0),
+        "high_usd_oz": gold_data.get('current_usd_oz', 0) * 1.01,
+        "low_usd_oz": gold_data.get('current_usd_oz', 0) * 0.99,
+        "source": gold_data.get('domestic_source', 'Unknown'),
+        "international_price": gold_data.get('current_usd_oz', 0),
+        "comex_price": gold_data.get('current_usd_oz_comex', 0),
+    }
 
 def format_gold_message(gold_data: dict, config: dict) -> str:
     """格式化黄金价格消息"""
     current_cny = gold_data.get("current_cny_g", 0)
     current_usd = gold_data.get("current_usd_oz", 0)
+    comex_usd = gold_data.get("comex_price", 0)
     change_pct = gold_data.get("change_pct", 0)
     change_cny = gold_data.get("change_cny_g", 0)
     
@@ -158,13 +150,21 @@ def format_gold_message(gold_data: dict, config: dict) -> str:
     alias = config.get("alias", "黄金")
     notes = config.get("notes", "")
     
+    # 构建国际金价显示
+    intl_lines = [
+        f"  伦敦金：{current_usd:.2f} 美元/盎司",
+    ]
+    if comex_usd > 0:
+        intl_lines.append(f"  COMEX 金：{comex_usd:.2f} 美元/盎司")
+    
     return f"""{change_symbol}【{gold_data['name']}】黄金价格提醒
 🏷️ 别名：{alias}
 ⏰ 时间：{datetime.now().strftime('%Y-%m-%d %H:%M')}
 
 💹 实时金价
-  折合人民币：{current_cny:.2f} 元/克
-  国际金价：{current_usd:.2f} 美元/盎司
+  国内金价：{current_cny:.2f} 元/克
+  国际金价:
+{chr(10).join(intl_lines)}
   涨跌额：{change_cny:+.2f} 元/克
   涨跌幅：{change_pct:+.2f}%
   
