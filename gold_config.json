@@ -1,9 +1,14 @@
 {
-  "version": 1,
+  "version": 2,
   "updated_at": "2026-03-25",
   "type": "AU9999",
   "alias": "黄金",
-  "notes": "上海黄金交易所 AU9999 现货价格",
+  "notes": "上海黄金交易所 AU9999 现货基准价（优先）+ COMEX 期货（备用）",
+  "data_sources": {
+    "primary": "SGE (上海黄金交易所)",
+    "fallback": "COMEX (腾讯财经)",
+    "note": "SGE 数据为每日基准价，非实时；COMEX 为国际期货实时价格"
+  },
   "settings": {
     "push_interval_minutes": 60,
     "push_time_range": {

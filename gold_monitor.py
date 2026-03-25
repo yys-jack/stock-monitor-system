@@ -37,7 +37,54 @@ def load_gold_config() -> dict:
         return json.load(f)
 
 def fetch_gold_price() -> Optional[dict]:
-    """获取 COMEX 黄金期货价格（腾讯财经接口）"""
+    """
+    获取黄金价格（优先国内，降级国际）
+    
+    数据源说明:
+    - 国内金价：上海黄金交易所 AU9999（通过 akshare 获取）
+    - 国际金价：COMEX 黄金期货（腾讯财经接口，作为备用）
+    
+    注意：COMEX 金价换算后与国内金价存在差异（约 5-10%），因为：
+    1. 国内外市场定价机制不同
+    2. 期货 vs 现货价格差异
+    3. 汇率波动影响
+    4. 税费和交易成本差异
+    """
+    # 方案 1: 尝试获取上海黄金交易所数据（通过 akshare）
+    try:
+        import akshare as ak
+        df = ak.spot_golden_benchmark_sge()
+        if len(df) > 0:
+            # 获取最新数据
+            latest = df.iloc[-1]
+            # 使用晚盘价，如果没有则用早盘价
+            current_cny_g = float(latest.get('晚盘价', latest.get('早盘价', 0)))
+            prev_cny_g = float(latest.get('早盘价', current_cny_g))
+            change_cny_g = current_cny_g - prev_cny_g
+            change_pct = (change_cny_g / prev_cny_g) * 100 if prev_cny_g else 0
+            
+            # 估算国际金价（反向换算）
+            exchange_rate = 7.2
+            current_usd_oz = (current_cny_g * 31.1035) / exchange_rate
+            
+            return {
+                "name": "上海黄金 AU9999",
+                "code": "AU9999",
+                "current_cny_g": current_cny_g,
+                "current_usd_oz": current_usd_oz,
+                "prev_close_cny_g": prev_cny_g,
+                "prev_close_usd_oz": (prev_cny_g * 31.1035) / exchange_rate,
+                "change_cny_g": change_cny_g,
+                "change_usd_oz": change_cny_g * 31.1035 / exchange_rate,
+                "change_pct": change_pct,
+                "high_usd_oz": current_usd_oz * 1.02,  # 估算
+                "low_usd_oz": current_usd_oz * 0.98,   # 估算
+                "source": "SGE",
+            }
+    except Exception as e:
+        print(f"[WARN] 获取 SGE 金价失败：{e}")
+    
+    # 方案 2: 降级使用 COMEX 国际金价（腾讯财经）
     try:
         url = "https://qt.gtimg.cn/q=hf_GC"
         headers = {
@@ -90,6 +137,7 @@ def fetch_gold_price() -> Optional[dict]:
             "change_pct": change_pct,
             "high_usd_oz": high_usd_oz,
             "low_usd_oz": low_usd_oz,
+            "source": "COMEX",
         }
     except Exception as e:
         print(f"[ERROR] 获取黄金价格失败：{e}")
@@ -212,7 +260,12 @@ def main():
         print("[ERROR] 黄金价格获取失败")
         return False
     
-    print(f"  ✅ 当前价：{gold_data['current_usd_oz']:.2f} 美元/盎司 ({gold_data['current_cny_g']:.2f} 元/克)")
+    source = gold_data.get('source', 'Unknown')
+    print(f"  ✅ 当前价：{gold_data['current_cny_g']:.2f} 元/克 ({gold_data['current_usd_oz']:.2f} 美元/盎司)")
+    print(f"  📍 数据源：{source}")
+    
+    if source == "COMEX":
+        print(f"  ⚠️  注意：COMEX 换算价可能与国内实际金价存在差异")
     
     # 格式化消息
     message = format_gold_message(gold_data, config)
