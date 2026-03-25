@@ -38,51 +38,52 @@ def load_gold_config() -> dict:
 
 def fetch_gold_price() -> Optional[dict]:
     """
-    获取黄金价格（优先国内，降级国际）
+    获取黄金价格（实时国内金价）
     
     数据源说明:
-    - 国内金价：上海黄金交易所 AU9999（通过 akshare 获取）
-    - 国际金价：COMEX 黄金期货（腾讯财经接口，作为备用）
+    - 国内金价：上海期货交易所黄金期货主力合约（实时）
+    - 备用：COMEX 黄金期货（腾讯财经接口，国际参考）
     
-    注意：COMEX 金价换算后与国内金价存在差异（约 5-10%），因为：
-    1. 国内外市场定价机制不同
-    2. 期货 vs 现货价格差异
-    3. 汇率波动影响
-    4. 税费和交易成本差异
+    上期所黄金期货 (AU0/AU2606 等) 是实时交易的国内黄金价格，准确性高。
     """
-    # 方案 1: 尝试获取上海黄金交易所数据（通过 akshare）
+    # 方案 1: 获取上期所黄金期货实时行情（推荐）
     try:
         import akshare as ak
-        df = ak.spot_golden_benchmark_sge()
+        # 获取黄金期货实时行情
+        df = ak.futures_zh_realtime(symbol="黄金")
+        
         if len(df) > 0:
-            # 获取最新数据
-            latest = df.iloc[-1]
-            # 使用晚盘价，如果没有则用早盘价
-            current_cny_g = float(latest.get('晚盘价', latest.get('早盘价', 0)))
-            prev_cny_g = float(latest.get('早盘价', current_cny_g))
-            change_cny_g = current_cny_g - prev_cny_g
-            change_pct = (change_cny_g / prev_cny_g) * 100 if prev_cny_g else 0
+            # 优先使用黄金连续合约 (AU0) 或主力合约
+            main_contract = df[df['symbol'] == 'AU0']
+            if len(main_contract) == 0:
+                main_contract = df.iloc[0:1]  # 使用第一行（通常是主力）
+            
+            row = main_contract.iloc[0]
+            current_cny_g = float(row.get('trade', 0))
+            prev_settlement = float(row.get('prevsettlement', current_cny_g))
+            change_pct = float(row.get('changepercent', 0))
+            change_cny_g = current_cny_g - prev_settlement
             
             # 估算国际金价（反向换算）
             exchange_rate = 7.2
             current_usd_oz = (current_cny_g * 31.1035) / exchange_rate
             
             return {
-                "name": "上海黄金 AU9999",
-                "code": "AU9999",
+                "name": "上期所黄金期货",
+                "code": "AU0",
                 "current_cny_g": current_cny_g,
                 "current_usd_oz": current_usd_oz,
-                "prev_close_cny_g": prev_cny_g,
-                "prev_close_usd_oz": (prev_cny_g * 31.1035) / exchange_rate,
+                "prev_close_cny_g": prev_settlement,
+                "prev_close_usd_oz": (prev_settlement * 31.1035) / exchange_rate,
                 "change_cny_g": change_cny_g,
                 "change_usd_oz": change_cny_g * 31.1035 / exchange_rate,
                 "change_pct": change_pct,
-                "high_usd_oz": current_usd_oz * 1.02,  # 估算
-                "low_usd_oz": current_usd_oz * 0.98,   # 估算
-                "source": "SGE",
+                "high_usd_oz": float(row.get('high', current_usd_oz * 1.01)),
+                "low_usd_oz": float(row.get('low', current_usd_oz * 0.99)),
+                "source": "SHFE",
             }
     except Exception as e:
-        print(f"[WARN] 获取 SGE 金价失败：{e}")
+        print(f"[WARN] 获取上期所金价失败：{e}")
     
     # 方案 2: 降级使用 COMEX 国际金价（腾讯财经）
     try:

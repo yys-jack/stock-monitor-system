@@ -1,13 +1,13 @@
 {
-  "version": 2,
+  "version": 3,
   "updated_at": "2026-03-25",
-  "type": "AU9999",
+  "type": "SHFE_AU0",
   "alias": "黄金",
-  "notes": "上海黄金交易所 AU9999 现货基准价（优先）+ COMEX 期货（备用）",
+  "notes": "上海期货交易所黄金期货主力合约（实时）+ COMEX 期货（备用）",
   "data_sources": {
-    "primary": "SGE (上海黄金交易所)",
+    "primary": "SHFE (上海期货交易所)",
     "fallback": "COMEX (腾讯财经)",
-    "note": "SGE 数据为每日基准价，非实时；COMEX 为国际期货实时价格"
+    "note": "SHFE 黄金期货 (AU0) 为实时交易价格；COMEX 为国际期货参考"
   },
   "settings": {
     "push_interval_minutes": 60,
