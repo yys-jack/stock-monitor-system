@@ -43,21 +43,21 @@ print_blue() {
 
 # 股票价格推送（交易时间每 30 分钟）
 STOCKS_CRON="# 股票价格推送 - 交易时间每 30 分钟
-30 9-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
-0 10-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
-0,30 13-14 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
-0 15 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1"
+30 9-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
+0 10-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
+0,30 13-14 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
+0 15 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1"
 
 # 黄金价格监控（交易时间每小时）
 GOLD_CRON="# 黄金价格推送 - 交易时间每小时
-30 9-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/gold_monitor.py' >> $SCRIPT_DIR/logs/gold_cron.log 2>&1
-30 13-14 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/gold_monitor.py' >> $SCRIPT_DIR/logs/gold_cron.log 2>&1"
+30 9-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/gold_monitor.py' >> $SCRIPT_DIR/logs/gold_cron.log 2>&1
+30 13-14 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/gold_monitor.py' >> $SCRIPT_DIR/logs/gold_cron.log 2>&1"
 
 # 股价异常预警（交易时间每 5 分钟）
 ALERT_CRON="# 股价异常预警 - 交易时间每 5 分钟
-*/5 9-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/price_alert_monitor.py' >> $SCRIPT_DIR/logs/alert_cron.log 2>&1
-*/5 13-14 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/price_alert_monitor.py' >> $SCRIPT_DIR/logs/alert_cron.log 2>&1
-0-5/5 15 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/price_alert_monitor.py' >> $SCRIPT_DIR/logs/alert_cron.log 2>&1"
+*/5 9-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/price_alert_monitor.py' >> $SCRIPT_DIR/logs/alert_cron.log 2>&1
+*/5 13-14 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/price_alert_monitor.py' >> $SCRIPT_DIR/logs/alert_cron.log 2>&1
+0-5/5 15 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/price_alert_monitor.py' >> $SCRIPT_DIR/logs/alert_cron.log 2>&1"
 
 # ==================== 功能函数 ====================
 
@@ -70,7 +70,7 @@ backup_crontab() {
 
 # 检查脚本是否存在
 check_scripts() {
-    local scripts=("$SCRIPT_DIR/multi_stocks_monitor.py" "$SCRIPT_DIR/gold_monitor.py" "$SCRIPT_DIR/price_alert_monitor.py")
+    local scripts=("$SCRIPT_DIR/scripts/multi_stocks_monitor.py" "$SCRIPT_DIR/scripts/gold_monitor.py" "$SCRIPT_DIR/scripts/price_alert_monitor.py")
     local all_exist=true
     
     for script in "${scripts[@]}"; do
