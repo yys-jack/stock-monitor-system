@@ -216,12 +216,47 @@ python3 gold_monitor.py
 
 **安装 Cron（交易时间每小时推送）：**
 ```bash
-./install_gold_cron.sh install
+./cron_install.sh gold    # 只安装黄金监控
+# 或
+./cron_install.sh install # 安装所有任务
 ```
 
 **输出：**
 - 飞书消息推送
 - `output/gold_price.txt` 消息文件
+
+---
+
+### 🛠️ Cron 定时任务管理
+
+**统一使用 `cron_install.sh` 管理所有定时任务：**
+
+```bash
+# 安装所有任务（股票 + 黄金 + 预警）
+./cron_install.sh install
+
+# 查看状态
+./cron_install.sh status
+
+# 卸载所有任务
+./cron_install.sh uninstall
+
+# 单独安装某项任务
+./cron_install.sh stocks  # 只安装股票推送
+./cron_install.sh gold    # 只安装黄金监控
+./cron_install.sh alert   # 只安装股价预警
+```
+
+**推送时间表：**
+| 任务 | 推送时间 | 频率 |
+|------|---------|------|
+| 股票推送 | 交易日 9:30-11:30, 13:00-15:00 | 每 30 分钟 |
+| 黄金监控 | 交易日 9:30-11:30, 13:00-15:00 | 每小时 |
+| 股价预警 | 交易日 9:30-11:30, 13:00-15:00 | 每 5 分钟 |
+
+**已废弃的旧脚本：**
+- ❌ `install_push_cron.sh` - 已废弃，使用 `cron_install.sh stocks`
+- ❌ `install_gold_cron.sh` - 已废弃，使用 `cron_install.sh gold`
 
 ---
 
