@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "updated_at": "2026-03-25",
+  "type": "AU9999",
+  "alias": "黄金",
+  "notes": "上海黄金交易所 AU9999 现货价格",
+  "settings": {
+    "push_interval_minutes": 60,
+    "push_time_range": {
+      "morning_start": "09:30",
+      "morning_end": "11:30",
+      "afternoon_start": "13:00",
+      "afternoon_end": "15:00"
+    },
+    "retry_times": 3,
+    "retry_delay_seconds": 2
+  }
+}

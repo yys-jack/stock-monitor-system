@@ -13,6 +13,7 @@
 | 模块 | 功能 | 状态 |
 |------|------|------|
 | 📊 **多股票监控** | 批量监控多只股票，支持配置管理 | ✅ 就绪 |
+| 🥇 **黄金监控** | 监控 COMEX 黄金期货价格（美元/盎司 + 人民币/克） | ✅ 就绪 |
 | ⏰ **定时推送** | 交易时间每 30 分钟推送实时股价 | ✅ 就绪 |
 | 🔮 **智能预测** | 技术指标分析 + 趋势预测（MA/MACD/RSI/KDJ） | ✅ 就绪 |
 | 🌐 **Web 界面** | 实时股价、新闻资讯、历史走势图表、股票配置管理 | ✅ 就绪 |
@@ -116,6 +117,7 @@ python3 prediction_push.py
 stock-monitor-system/
 ├── 📄 核心脚本
 │   ├── multi_stocks_monitor.py    # 多股票监控主脚本
+│   ├── gold_monitor.py            # 黄金价格监控（新增）
 │   ├── price_alert_monitor.py     # 股价异常预警
 │   ├── prediction_push.py         # 预测推送（新增）
 │   └── stock_predictor.py         # 股票预测器
@@ -127,8 +129,12 @@ stock-monitor-system/
 │
 ├── ⚙️ 配置
 │   ├── stocks_config.json         # 股票配置
+│   ├── gold_config.json           # 黄金配置（新增）
+│   ├── feishu_config.json         # 飞书推送配置
 │   ├── requirements.txt           # Python 依赖
-│   └── install_alert_cron.sh      # Cron 安装脚本
+│   ├── install_alert_cron.sh      # 预警 Cron 安装脚本
+│   ├── install_push_cron.sh       # 股票推送 Cron 安装脚本
+│   └── install_gold_cron.sh       # 黄金监控 Cron 安装脚本（新增）
 │
 ├── 📚 文档
 │   ├── README.md                  # 使用说明
@@ -169,7 +175,48 @@ python3 multi_stocks_monitor.py
 
 ---
 
-### 2️⃣ 股价异常预警 (`price_alert_monitor.py`)
+### 2️⃣ 黄金价格监控 (`gold_monitor.py`)
+
+**功能：** 监控 COMEX 黄金期货价格，提供美元/盎司和人民币/克双价格
+
+**特性：**
+- ✅ 实时获取国际金价（COMEX 黄金期货）
+- ✅ 自动换算人民币/克价格（汇率 7.2）
+- ✅ 显示涨跌幅和涨跌额
+- ✅ 交易时间每小时推送一次
+- ✅ 飞书消息推送
+
+**配置：** 编辑 `gold_config.json`：
+```json
+{
+  "type": "COMEX",
+  "alias": "黄金",
+  "notes": "COMEX 黄金期货价格",
+  "settings": {
+    "push_interval_minutes": 60,
+    "retry_times": 3,
+    "retry_delay_seconds": 2
+  }
+}
+```
+
+**运行：**
+```bash
+python3 gold_monitor.py
+```
+
+**安装 Cron（交易时间每小时推送）：**
+```bash
+./install_gold_cron.sh install
+```
+
+**输出：**
+- 飞书消息推送
+- `output/gold_price.txt` 消息文件
+
+---
+
+### 3️⃣ 股价异常预警 (`price_alert_monitor.py`)
 
 **功能：** 监控股价涨跌幅，超过阈值时即时推送
 
