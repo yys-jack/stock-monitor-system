@@ -17,9 +17,9 @@
 
 | 指标 | 状态 |
 |------|------|
-| **整体完成率** | **100% (13/13)** ✅ |
-| **当前 Sprint** | Sprint 3 - 功能扩展 ✅ |
-| **最新版本** | v3.0 (2026-03-11) |
+| **整体完成率** | **100% (17/17)** ✅ |
+| **当前 Sprint** | Sprint 4 - 黄金监控 ✅ |
+| **最新版本** | v4.0 (2026-03-25) |
 | **GitHub 仓库** | ✅ 已推送 |
 
 ---
@@ -88,12 +88,51 @@
 
 ---
 
+### Sprint 4 - 黄金价格监控 (2026-03-25) ✅
+
+**主题：** 黄金价格监控功能  
+**完成率：** 100% (4/4)  
+**工时：** 3 小时  
+**版本：** v4.0
+
+**P1 任务完成：**
+| 任务 ID | 任务 | 工时 | 状态 |
+|--------|------|------|------|
+| #12 | 黄金监控脚本开发 | 1.5h | ✅ |
+| #13 | 数据源优化（SHFE+ 伦敦金+COMEX） | 0.5h | ✅ |
+| #14 | Cron 定时任务配置 | 0.5h | ✅ |
+| #15 | 文档更新与代码推送 | 0.5h | ✅ |
+
+**交付成果：**
+1. `gold_monitor.py` - 黄金价格监控脚本
+2. `gold_config.json` - 黄金监控配置文件
+3. `install_gold_cron.sh` - Cron 安装脚本
+4. 数据源优化（上期所期货 - 升水≈现货价）
+5. 国际金价（伦敦金+COMEX 双数据源）
+6. 飞书推送集成
+
+**技术指标：**
+- 国内金价：1020 元/克（贴近支付宝 AU9999）
+- 国际金价：伦敦金 + COMEX 实时数据
+- 推送频率：交易日每小时 1 次
+- 数据源：SHFE（上期所）+ akshare
+
+**开发闭环：**
+- ✅ 先更新敏捷开发文档
+- ✅ 实施代码开发
+- ✅ 同步更新 README/ROADMAP
+- ✅ 清理临时文件
+- ✅ 推送至 GitHub
+
+---
+
 ## 📁 项目结构
 
 ```
 stock-monitor-system/
 ├── 📄 核心脚本
 │   ├── multi_stocks_monitor.py    # 多股票监控
+│   ├── gold_monitor.py            # 黄金价格监控 ⭐新增
 │   ├── price_alert_monitor.py     # 股价预警
 │   ├── prediction_push.py         # 预测推送
 │   └── stock_predictor.py         # 股票预测器
@@ -104,8 +143,12 @@ stock-monitor-system/
 │
 ├── ⚙️ 配置
 │   ├── stocks_config.json         # 股票配置
+│   ├── gold_config.json           # 黄金配置 ⭐新增
+│   ├── feishu_config.json         # 飞书推送配置
 │   ├── requirements.txt           # Python 依赖
-│   └── install_alert_cron.sh      # Cron 安装脚本
+│   ├── install_alert_cron.sh      # 预警 Cron 脚本
+│   ├── install_push_cron.sh       # 股票推送 Cron 脚本
+│   └── install_gold_cron.sh       # 黄金监控 Cron 脚本 ⭐新增
 │
 ├── 📚 文档
 │   ├── README.md                  # 使用说明
