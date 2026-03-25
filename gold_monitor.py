@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 黄金价格监控脚本
-监控国内黄金现货价格（AU9999）和国际黄金期货价格
+监控国内黄金价格（上期所期货）和国际黄金价格（伦敦金+COMEX）
 """
 
 import json
@@ -41,11 +41,11 @@ def fetch_gold_price() -> Optional[dict]:
     获取黄金价格（国内 + 国际实时金价）
     
     数据源说明:
-    - 国内金价：上海期货交易所黄金期货主力合约（实时）
+    - 国内金价：上期所黄金期货 AU2606 主力合约（实时）
     - 国际金价：伦敦金 (XAU) + COMEX 黄金期货（通过 akshare 获取）
     
-    上期所黄金期货 (AU0) 是实时交易的国内黄金价格，准确性高。
-    伦敦金/COMEX 提供实时国际金价参考。
+    注意：期货价格通常比现货高 3-5 元/克（升水），这是正常现象。
+    支付宝/银行显示的 AU9999 是现货价格，期货价格会略高。
     """
     import akshare as ak
     
@@ -56,8 +56,11 @@ def fetch_gold_price() -> Optional[dict]:
         df = ak.futures_zh_realtime(symbol="黄金")
         
         if len(df) > 0:
-            # 优先使用黄金连续合约 (AU0) 或主力合约
-            main_contract = df[df['symbol'] == 'AU0']
+            # 使用 AU2606 主力合约（最近月份）
+            main_contract = df[df['symbol'] == 'AU2606']
+            if len(main_contract) == 0:
+                # 降级使用 AU0 连续合约
+                main_contract = df[df['symbol'] == 'AU0']
             if len(main_contract) == 0:
                 main_contract = df.iloc[0:1]
             
@@ -67,14 +70,24 @@ def fetch_gold_price() -> Optional[dict]:
             change_pct = float(row.get('changepercent', 0))
             change_cny_g = current_cny_g - prev_settlement
             
+            # 估算国际金价（反向换算）
+            exchange_rate = 7.2
+            current_usd_oz = (current_cny_g * 31.1035) / exchange_rate
+            
+            # 期货价格通常比现货高 3-5 元，这里减去升水得到近似现货价
+            futures_premium = 3.5  # 期货升水
+            spot_cny_g = current_cny_g - futures_premium
+            
             gold_data.update({
                 "domestic_name": "上期所黄金期货",
-                "domestic_code": "AU0",
-                "current_cny_g": current_cny_g,
+                "domestic_code": row.get('symbol', 'AU2606'),
+                "current_cny_g": current_cny_g,  # 期货价格
+                "spot_cny_g": spot_cny_g,  # 估算现货价
                 "prev_close_cny_g": prev_settlement,
                 "change_cny_g": change_cny_g,
                 "change_pct": change_pct,
                 "domestic_source": "SHFE",
+                "futures_premium": futures_premium,
             })
     except Exception as e:
         print(f"[WARN] 获取上期所金价失败：{e}")
@@ -119,13 +132,17 @@ def fetch_gold_price() -> Optional[dict]:
     if not gold_data:
         return None
     
-    # 构建返回数据
+    # 构建返回数据 - 使用估算的现货价格（更贴近支付宝/银行显示的价格）
+    use_spot = gold_data.get('spot_cny_g', 0) > 0
+    display_cny_g = gold_data.get('spot_cny_g', gold_data.get('current_cny_g', 0))
+    
     return {
         "name": gold_data.get('domestic_name', '黄金'),
-        "code": gold_data.get('domestic_code', 'AU0'),
-        "current_cny_g": gold_data.get('current_cny_g', 0),
+        "code": gold_data.get('domestic_code', 'AU2606'),
+        "current_cny_g": display_cny_g,  # 显示现货价（估算）
+        "futures_cny_g": gold_data.get('current_cny_g', 0),  # 期货价
         "current_usd_oz": gold_data.get('current_usd_oz', gold_data.get('current_usd_oz_comex', 0)),
-        "prev_close_cny_g": gold_data.get('prev_close_cny_g', 0),
+        "prev_close_cny_g": gold_data.get('prev_close_cny_g', 0) - gold_data.get('futures_premium', 3.5),
         "prev_close_usd_oz": gold_data.get('prev_close_cny_g', 0) * 31.1035 / 7.2,
         "change_cny_g": gold_data.get('change_cny_g', 0),
         "change_usd_oz": gold_data.get('change_usd_oz', 0),
@@ -135,11 +152,13 @@ def fetch_gold_price() -> Optional[dict]:
         "source": gold_data.get('domestic_source', 'Unknown'),
         "international_price": gold_data.get('current_usd_oz', 0),
         "comex_price": gold_data.get('current_usd_oz_comex', 0),
+        "use_spot_price": use_spot,
     }
 
 def format_gold_message(gold_data: dict, config: dict) -> str:
     """格式化黄金价格消息"""
     current_cny = gold_data.get("current_cny_g", 0)
+    futures_cny = gold_data.get("futures_cny_g", 0)
     current_usd = gold_data.get("current_usd_oz", 0)
     comex_usd = gold_data.get("comex_price", 0)
     change_pct = gold_data.get("change_pct", 0)
@@ -157,12 +176,17 @@ def format_gold_message(gold_data: dict, config: dict) -> str:
     if comex_usd > 0:
         intl_lines.append(f"  COMEX 金：{comex_usd:.2f} 美元/盎司")
     
+    # 如果使用了估算现货价，添加说明
+    price_note = ""
+    if gold_data.get("use_spot_price", False):
+        price_note = f" (现货≈{current_cny:.2f}, 期货={futures_cny:.2f})"
+    
     return f"""{change_symbol}【{gold_data['name']}】黄金价格提醒
 🏷️ 别名：{alias}
 ⏰ 时间：{datetime.now().strftime('%Y-%m-%d %H:%M')}
 
 💹 实时金价
-  国内金价：{current_cny:.2f} 元/克
+  国内金价：{current_cny:.2f} 元/克{price_note}
   国际金价:
 {chr(10).join(intl_lines)}
   涨跌额：{change_cny:+.2f} 元/克
@@ -250,7 +274,7 @@ def main():
     
     settings = config.get("settings", {})
     
-    print(f"[INFO] 监控类型：{config.get('type', 'COMEX')}")
+    print(f"[INFO] 监控类型：{config.get('type', 'SHFE_AU2606')}")
     
     # 获取黄金价格
     print(f"\n[INFO] 获取黄金价格...")
@@ -262,11 +286,11 @@ def main():
         return False
     
     source = gold_data.get('source', 'Unknown')
-    print(f"  ✅ 当前价：{gold_data['current_cny_g']:.2f} 元/克 ({gold_data['current_usd_oz']:.2f} 美元/盎司)")
+    print(f"  ✅ 现货价：{gold_data['current_cny_g']:.2f} 元/克 (期货：{gold_data.get('futures_cny_g', 0):.2f} 元/克)")
     print(f"  📍 数据源：{source}")
     
-    if source == "COMEX":
-        print(f"  ⚠️  注意：COMEX 换算价可能与国内实际金价存在差异")
+    if gold_data.get("use_spot_price", False):
+        print(f"  ℹ️  已减去期货升水 {gold_data.get('futures_premium', 3.5):.1f} 元，贴近支付宝/银行价格")
     
     # 格式化消息
     message = format_gold_message(gold_data, config)
