@@ -139,6 +139,9 @@ stock-monitor-system/
 ├── 📚 文档
 │   ├── README.md                  # 使用说明
 │   ├── ROADMAP.md                 # 版本路线图
+│   ├── TECH_STACK.md              # 技术栈文档 ⭐新增
+│   ├── AGILE_DEVELOPMENT.md       # 敏捷开发文档
+│   ├── GIT_WORKFLOW.md            # Git 工作流程
 │   ├── SPRINT_3_PLAN.md           # Sprint 3 计划
 │   ├── SPRINT_REPORTS.md          # Sprint 报告汇总
 │   └── PREDICTION_REAL_DATA_REPORT.md  # 预测数据验证
