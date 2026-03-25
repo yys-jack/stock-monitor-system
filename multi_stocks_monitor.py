@@ -217,15 +217,16 @@ def is_trading_time() -> bool:
         return False
     
     # 交易时间：上午 9:30-11:30，下午 13:00-15:00
+    # 注意：cron 任务可能延迟几秒执行，所以结束时间加 1 分钟容错
     current_time = now.strftime("%H%M")
     
-    # 上午交易时间：9:30-11:30
+    # 上午交易时间：9:30-11:31（含 11:30 的推送）
     morning_start = int("0930")
-    morning_end = int("1130")
+    morning_end = int("1131")  # 加 1 分钟容错
     
-    # 下午交易时间：13:00-15:00
+    # 下午交易时间：13:00-15:01（含 15:00 的推送）
     afternoon_start = int("1300")
-    afternoon_end = int("1500")
+    afternoon_end = int("1501")  # 加 1 分钟容错
     
     current = int(current_time)
     
