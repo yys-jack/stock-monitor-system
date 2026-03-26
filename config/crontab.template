@@ -1,0 +1,126 @@
+# Crontab 配置模板
+
+**用途：** 股票监控系统定时任务配置  
+**安装方式：** 见下方说明
+
+---
+
+## ⚠️ 重要说明
+
+**不要直接编辑此文件！**
+
+此文件是模板，用于版本控制和 PR 审查。实际安装的 crontab 应通过以下命令生成：
+
+```bash
+# 安装 crontab
+./scripts/install_crontab.sh
+```
+
+---
+
+## 配置内容
+
+```cron
+# ==================== 打卡提醒 - 工作日 ====================
+
+# 上班打卡提醒 - 周一至周五 8:50
+50 8 * * 1-5 PATH=/home/yy/.npm-global/bin:/usr/local/bin:/usr/bin:/bin && openclaw message send --channel feishu --target user:ou_02e3153454246dd33432d6a00d3db941 --message "⏰ 上班打卡提醒\n\n该打卡啦！别忘了哦～ 🐭"
+
+# 下班打卡提醒 - 周一至周五 17:00
+0 17 * * 1-5 PATH=/home/yy/.npm-global/bin:/usr/local/bin:/usr/bin:/bin && openclaw message send --channel feishu --target user:ou_02e3153454246dd33432d6a00d3db941 --message "⏰ 下班打卡提醒\n\n可以准备打卡下班啦！辛苦一天了～ 🐭"
+
+# ==================== 股票监控推送 ====================
+
+# 黄金价格推送 - 交易时间每小时
+30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
+30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
+
+# 股票价格推送 - 交易时间每 30 分钟 (v3 - 修复路径)
+# 上午：9:30, 10:00, 10:30, 11:00, 11:30
+30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+0 10-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+
+# 下午：13:00, 13:30, 14:00, 14:30, 15:00
+0,30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+0 15 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+```
+
+---
+
+## 安装说明
+
+### 方式 A: 使用安装脚本（推荐）
+
+```bash
+cd /home/yy/.openclaw/workspace-partrickstar/stock-monitor-system
+./scripts/install_crontab.sh
+```
+
+### 方式 B: 手动安装
+
+1. 替换模板变量：
+```bash
+sed 's|{{PROJECT_ROOT}}|/home/yy/.openclaw/workspace-partrickstar/stock-monitor-system|g' config/crontab.template > /tmp/crontab_install.txt
+```
+
+2. 查看确认：
+```bash
+cat /tmp/crontab_install.txt
+```
+
+3. 安装到 crontab：
+```bash
+crontab /tmp/crontab_install.txt
+```
+
+4. 验证安装：
+```bash
+crontab -l | grep multi_stocks
+```
+
+---
+
+## 验证命令
+
+```bash
+# 查看已安装的 crontab
+crontab -l
+
+# 检查 cron 服务状态
+systemctl status cron
+
+# 查看执行日志
+grep "multi_stocks" /var/log/syslog | tail -10
+
+# 运行验证脚本
+./scripts/verify_push.sh
+```
+
+---
+
+## 卸载命令
+
+```bash
+# 备份当前 crontab
+crontab -l > /tmp/crontab_backup.txt
+
+# 编辑移除股票监控相关任务
+crontab -e
+```
+
+---
+
+## 修改流程
+
+1. 编辑 `config/crontab.template`
+2. 提交 PR 审查
+3. PR 合并后，运行安装脚本：
+   ```bash
+   ./scripts/install_crontab.sh
+   ```
+4. 验证推送正常
+
+---
+
+**创建日期：** 2026-03-26  
+**关联事件：** Crontab 路径错误复盘（POSTMORTEM_20260326.md）

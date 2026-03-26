@@ -1,3 +1,10 @@
+# Logs
+logs/
+*.log
+
+# Output
+output/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -5,22 +12,8 @@ __pycache__/
 *.so
 .Python
 venv/
+ENV/
 env/
-.env
-
-# 日志
-*.log
-logs/
-
-# 数据
-data/*.db
-output/*.txt
-
-# 敏感配置（包含飞书凭证）
-feishu_config.json
-*.local.json
-secrets.json
-.env
 
 # IDE
 .vscode/
@@ -29,6 +22,10 @@ secrets.json
 *.swo
 *~
 
-# 系统
-.DS_Store
-Thumbs.db
+# Config (with secrets)
+config/feishu_config.json
+config/stocks_config.json
+config/gold_config.json
+
+# Crontab backups
+/tmp/crontab_*.txt
