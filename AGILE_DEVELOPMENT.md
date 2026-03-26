@@ -255,8 +255,10 @@
 
 **Git 操作：**
 - ✅ 创建 feature 分支：`feature/cleanup-20260326`
-- ✅ 提交清理变更
-- ⏳ 待推送和 PR 审查
+- ✅ 提交清理变更（3 个 commit）
+- ✅ 推送到 GitHub
+- ✅ PR 已创建：https://github.com/yys-jack/stock-monitor-system/pull/new/feature/cleanup-20260326
+- ⏳ 待 PR 审查和合并
 
 ---
 
