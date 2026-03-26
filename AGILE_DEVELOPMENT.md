@@ -17,10 +17,10 @@
 
 | 指标 | 状态 |
 |------|------|
-| **整体完成率** | **100% (22/22)** ✅ |
-| **当前 Sprint** | Sprint 5 - Flask 重构 ✅ |
-| **最新版本** | v5.0 (2026-03-25) |
-| **GitHub 仓库** | ✅ 已推送 |
+| **整体完成率** | **100% (23/23)** ✅ |
+| **当前 Sprint** | Sprint 5 - 项目清理 ✅ |
+| **最新版本** | v5.1 (2026-03-26) |
+| **GitHub 仓库** | ⏳ 待推送 |
 
 ---
 
@@ -224,6 +224,39 @@
 **推送时间安排：**
 - **交易日**: 上午 9:30-11:30（每 30 分钟），下午 13:00-15:00（每 30 分钟）
 - **非交易日**: 自动跳过推送
+
+---
+
+### Sprint 5 - 项目清理 (2026-03-26 21:55) ✅
+
+**主题：** 清理过时文件和临时文档  
+**完成率：** 100% (1/1)  
+**工时：** 0.5 小时  
+**版本：** v5.1
+
+**清理内容：**
+- ✅ 删除临时文档（6 个）：
+  - `CHANGELOG_CRON_FIX.md`
+  - `LOGS_CLEANUP_REPORT.md`
+  - `PREDICTION_REAL_DATA_REPORT.md`
+  - `REFACTOR_TEST_REPORT.md`
+  - `VERIFY_TOMORROW_PUSH.md`
+  - `install_alert_cron.sh`（已被 `cron_install.sh` 替代）
+- ✅ 清理 `__pycache__` 目录（5 个）
+- ✅ 清理 `scripts/output` 临时目录
+- ✅ 更新 `.gitignore` 规则
+
+**保留的重要文档：**
+- ✅ `POSTMORTEM_20260326.md` - 重要复盘文档
+- ✅ `PUSH_INVESTIGATION_REPORT.md` - 问题调查报告
+- ✅ `MEMORY.md` - 开发规范和教训
+- ✅ `TECH_STACK.md` - 技术栈文档
+- ✅ `TESTING.md` - 测试规范
+
+**Git 操作：**
+- ✅ 创建 feature 分支：`feature/cleanup-20260326`
+- ✅ 提交清理变更
+- ⏳ 待推送和 PR 审查
 
 ---
 

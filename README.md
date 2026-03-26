@@ -156,16 +156,17 @@ stock-monitor-system/
 │   ├── AGILE_DEVELOPMENT.md       # 敏捷开发文档
 │   ├── GIT_WORKFLOW.md            # Git 工作流程
 │   ├── ROADMAP.md                 # 版本路线图
-│   └── PREDICTION_REAL_DATA_REPORT.md  # 预测数据验证
+│   ├── MEMORY.md                  # 开发规范与教训 ⭐
+│   ├── POSTMORTEM_20260326.md     # Crontab 路径错误复盘
+│   └── PUSH_INVESTIGATION_REPORT.md  # 推送问题调查报告
 │
 ├── 🛠️ 运维脚本
 │   ├── cron_install.sh            # Cron 统一管理 ⭐
-│   └── install_alert_cron.sh      # 预警 Cron（旧版）
+│   └── verify_push.sh             # 推送验证脚本
 │
 └── 📊 数据目录
     ├── data/                      # 数据库文件
-    ├── logs/                      # 日志文件
-    └── output/                    # 输出文件
+    └── logs/                      # 日志文件
 ```
 
 ---
@@ -369,7 +370,7 @@ python3 web_server.py
 
 ```bash
 cd stock-monitor-system
-./install_alert_cron.sh install
+./cron_install.sh install
 ```
 
 ### 方式 B: 手动配置 Cron
