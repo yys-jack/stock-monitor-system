@@ -32,26 +32,24 @@ def load_feishu_config() -> dict:
         config = json.load(f)
         return config.get('feishu', {})
 
-def load_stock_config() -> dict:
-    """加载股票配置"""
+def load_stock_config() -> list:
+    """加载股票配置列表"""
     if not STOCK_CONFIG.exists():
-        return {"stock_code": "000063", "stock_name": "中兴通讯"}
+        return [{"code": "000063", "name": "中兴通讯", "enabled": True}]
     
     with open(STOCK_CONFIG, 'r', encoding='utf-8') as f:
         config = json.load(f)
         stocks = config.get('stocks', [])
-        if stocks:
-            return stocks[0]  # 返回第一只股票
-        return {"stock_code": "000063", "stock_name": "中兴通讯"}
+        # 只返回启用的股票
+        return [s for s in stocks if s.get('enabled', True)]
 
 # 加载配置
 FEISHU_CONFIG = load_feishu_config()
-STOCK_INFO = load_stock_config()
+ENABLED_STOCKS = load_stock_config()
 
 # 配置
 CONFIG = {
-    "stock_code": STOCK_INFO.get('code', '000063'),
-    "stock_name": STOCK_INFO.get('name', '中兴通讯'),
+    "stocks": ENABLED_STOCKS,
     
     # 飞书配置
     "feishu": FEISHU_CONFIG,
@@ -347,42 +345,92 @@ def send_feishu_message(message: str) -> bool:
     return False
 
 def main():
-    """主函数"""
+    """主函数 - 为所有启用的股票生成预测并推送汇总"""
     print(f"🔮 股票预测推送 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*60)
     
-    stock_code = CONFIG['stock_code']
-    print(f"[INFO] 生成 {stock_code} 预测报告...")
+    stocks = CONFIG.get('stocks', [])
+    print(f"[INFO] 启用股票数量：{len(stocks)}")
     
-    report = generate_prediction_report(stock_code)
-    
-    if not report['success']:
-        print(f"[ERROR] 生成预测失败：{report['error']}")
+    if not stocks:
+        print("[ERROR] 没有启用的股票")
         return False
     
-    data = report['data']
-    source = report.get('source', 'akshare')
-    print(f"[INFO] 数据源：{source}")
-    print(f"[INFO] 当前股价：¥{data['current_price']:.2f} ({data['change_pct']:+.2f}%)")
-    print(f"[INFO] 预测信号：{data['signal']} (置信度：{data['confidence']:.1f}%)")
+    all_reports = []
     
-    # 格式化消息
-    message = format_prediction_message(report)
+    # 为每只股票生成预测报告
+    for stock in stocks:
+        stock_code = stock.get('code', '')
+        stock_name = stock.get('name', '')
+        
+        print(f"\n[INFO] 生成 {stock_name}({stock_code}) 预测报告...")
+        
+        report = generate_prediction_report(stock_code)
+        
+        if not report['success']:
+            print(f"[WARN] {stock_name} 生成预测失败：{report['error']}")
+            continue
+        
+        data = report['data']
+        source = report.get('source', 'akshare')
+        print(f"[INFO] 数据源：{source}")
+        print(f"[INFO] 当前股价：¥{data['current_price']:.2f} ({data['change_pct']:+.2f}%)")
+        print(f"[INFO] 预测信号：{data['signal']} (置信度：{data['confidence']:.1f}%)")
+        
+        # 写入单个文件
+        output_dir = Path(__file__).parent / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_file = output_dir / f"prediction_{stock_code}.txt"
+        message = format_prediction_message(report)
+        output_file.write_text(message, encoding='utf-8')
+        print(f"[INFO] 报告已写入：{output_file}")
+        
+        all_reports.append({
+            'stock': stock,
+            'report': report,
+            'message': message
+        })
     
-    # 写入文件
-    output_dir = Path(__file__).parent / "output"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / f"prediction_{stock_code}.txt"
-    output_file.write_text(message, encoding='utf-8')
-    print(f"[INFO] 报告已写入：{output_file}")
+    if not all_reports:
+        print("[ERROR] 所有股票预测生成失败")
+        return False
     
-    # 发送飞书
+    # 生成汇总消息并推送
+    print(f"\n[INFO] 生成汇总推送消息...")
+    summary_message = format_summary_message(all_reports)
+    print(summary_message)
+    
+    # 发送飞书汇总消息
     if CONFIG['feishu'].get('enabled'):
-        print(f"[INFO] 发送飞书消息...")
-        success = send_feishu_message(message)
+        print(f"\n[INFO] 发送飞书汇总消息...")
+        success = send_feishu_message(summary_message)
         return success
     
     return True
+
+
+def format_summary_message(all_reports: list) -> str:
+    """格式化汇总消息"""
+    today = datetime.now().strftime('%Y-%m-%d')
+    message = f"🔮 **股票预测汇总** - {today}\n\n"
+    
+    for item in all_reports:
+        stock = item['stock']
+        report = item['report']
+        data = report['data']
+        
+        signal_emoji = "🟢" if data['signal'] == '买入' else ("🔴" if data['signal'] == '卖出' else "🟡")
+        trend_emoji = "📈" if data['trend'] == '上涨' else ("📉" if data['trend'] == '下跌' else "➡️")
+        
+        message += f"**{stock['name']} ({stock['code']})**\n"
+        message += f"{signal_emoji} 信号：{data['signal']}\n"
+        message += f"{trend_emoji} 趋势：{data['trend']}\n"
+        message += f"🎯 置信度：{data['confidence']:.1f}%\n"
+        message += f"💰 支撑位：¥{data['support_level']:.2f} | 压力位：¥{data['pressure_level']:.2f}\n\n"
+    
+    message += "---\n⚠️ 预测仅供参考，不构成投资建议\n📊 数据源：akshare + 技术分析"
+    
+    return message
 
 if __name__ == "__main__":
     success = main()
