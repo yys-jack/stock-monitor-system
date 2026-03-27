@@ -267,6 +267,43 @@ PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log
 
 ---
 
+### Sprint 5 - 问题修复 (2026-03-27 11:17) ✅
+
+**主题：** Cron 环境变量问题修复  
+**完成率：** 100% (1/1)  
+**工时：** 0.3 小时  
+**版本：** v5.3
+
+**问题描述：**
+- 11:00 的股票监控推送没有收到
+- Cron 日志显示任务执行了，但脚本没有输出
+- `output/` 目录没有 11:00 生成的文件
+- **根本原因：** `source venv/bin/activate` 在 cron 环境中没有正确激活虚拟环境
+
+**修复内容：**
+- ✅ 使用虚拟环境的绝对路径 `./venv/bin/python3`
+- ✅ 移除 `source venv/bin/activate` 命令
+- ✅ 更新 `config/crontab.template` 配置文件（v5 版本）
+- ✅ 提交到 Git 分支 `feature/cleanup-20260326`
+
+**配置变更：**
+```cron
+# 修复前 (v4)
+cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+
+# 修复后 (v5)
+cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+```
+
+**影响范围：**
+- 股票监控：4 个时间段，共 6 条 cron 规则
+- 黄金监控：2 个时间段，共 2 条 cron 规则
+
+**下次执行时间：**
+- 11:30（约 13 分钟后）- 将验证修复效果
+
+---
+
 ### Sprint 5 - 项目清理 (2026-03-26 21:55) ✅
 
 **主题：** 清理过时文件和临时文档  
