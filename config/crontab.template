@@ -32,17 +32,17 @@
 # ==================== 股票监控推送 ====================
 
 # 黄金价格推送 - 交易时间每小时
-30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
-30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
+30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
+30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
 
-# 股票价格推送 - 交易时间每 30 分钟 (v3 - 修复路径)
+# 股票价格推送 - 交易时间每 30 分钟 (v4 - 添加 PYTHONUNBUFFERED 解决日志缓冲问题)
 # 上午：9:30, 10:00, 10:30, 11:00, 11:30
-30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
-0 10-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+0 10-11 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 
 # 下午：13:00, 13:30, 14:00, 14:30, 15:00
-0,30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
-0 15 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+0,30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+0 15 * * 1-5 cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 ```
 
 ---
