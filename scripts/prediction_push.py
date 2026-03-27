@@ -32,26 +32,24 @@ def load_feishu_config() -> dict:
         config = json.load(f)
         return config.get('feishu', {})
 
-def load_stock_config() -> dict:
-    """加载股票配置"""
+def load_stock_config() -> list:
+    """加载股票配置列表"""
     if not STOCK_CONFIG.exists():
-        return {"stock_code": "000063", "stock_name": "中兴通讯"}
+        return [{"code": "000063", "name": "中兴通讯", "enabled": True}]
     
     with open(STOCK_CONFIG, 'r', encoding='utf-8') as f:
         config = json.load(f)
         stocks = config.get('stocks', [])
-        if stocks:
-            return stocks[0]  # 返回第一只股票
-        return {"stock_code": "000063", "stock_name": "中兴通讯"}
+        # 只返回启用的股票
+        return [s for s in stocks if s.get('enabled', True)]
 
 # 加载配置
 FEISHU_CONFIG = load_feishu_config()
-STOCK_INFO = load_stock_config()
+ENABLED_STOCKS = load_stock_config()
 
 # 配置
 CONFIG = {
-    "stock_code": STOCK_INFO.get('code', '000063'),
-    "stock_name": STOCK_INFO.get('name', '中兴通讯'),
+    "stocks": ENABLED_STOCKS,
     
     # 飞书配置
     "feishu": FEISHU_CONFIG,
@@ -106,57 +104,46 @@ def fetch_stock_price_tencent(code: str) -> Optional[Dict]:
 
 def generate_prediction_report(stock_code: str) -> dict:
     """生成预测报告（带备用数据源）"""
-    # 首先尝试使用 akshare 获取完整数据
+    # 使用 StockPredictor 的 predict 方法（会保存历史记录）
     try:
         from stock_predictor import StockPredictor
         predictor = StockPredictor(stock_code)
         
-        # 获取数据
-        df = predictor.fetch_history_data(days=60)
-        if not df.empty:
-            # 计算指标
-            df = predictor.calculate_ma(df)
-            df = predictor.calculate_macd(df)
-            df = predictor.calculate_rsi(df)
-            df = predictor.calculate_kdj(df)
-            df = predictor.calculate_boll(df)
-            
-            # 趋势分析
-            trend_analysis = predictor.analyze_trend(df)
-            prediction = predictor.predict_price(df, days=5)
-            
-            # 获取最新数据
-            latest = df.iloc[-1]
-            
+        # 获取预测结果（会自动保存到历史记录）
+        prediction_result = predictor.predict()
+        
+        # 获取当前股价
+        price_data = fetch_stock_price_tencent(stock_code)
+        if not price_data:
             return {
-                "success": True,
-                "data": {
-                    "stock_code": stock_code,
-                    "stock_name": predictor.stock_name,
-                    "date": datetime.now().strftime('%Y-%m-%d'),
-                    "current_price": float(latest.get('收盘', 0)),
-                    "change_pct": float(latest.get('涨跌幅', 0)),
-                    "volume": int(latest.get('成交量', 0)),
-                    
-                    # 技术指标
-                    "ma5": float(latest.get('MA5', 0)),
-                    "ma10": float(latest.get('MA10', 0)),
-                    "ma20": float(latest.get('MA20', 0)),
-                    "macd": float(latest.get('MACD', 0)),
-                    "rsi": float(latest.get('RSI', 0)),
-                    "kdj_k": float(latest.get('K', 0)),
-                    "kdj_d": float(latest.get('D', 0)),
-                    
-                    # 预测结果
-                    "signal": trend_analysis.get('overall_signal', '中性'),
-                    "trend": trend_analysis.get('trend', '震荡'),
-                    "confidence": prediction.get('confidence', 0),
-                    "predicted_change": prediction.get('change_pct', 0),
-                    "support_level": prediction.get('support', 0),
-                    "pressure_level": prediction.get('resistance', 0),
-                },
-                "source": "akshare"
+                "success": False,
+                "error": "获取股价失败",
+                "data": {}
             }
+        
+        return {
+            "success": True,
+            "data": {
+                "stock_code": stock_code,
+                "stock_name": predictor.stock_name,
+                "date": datetime.now().strftime('%Y-%m-%d'),
+                "current_price": price_data['current'],
+                "change_pct": price_data['change_pct'],
+                "volume": price_data.get('volume', 0),
+                
+                # 预测结果
+                "signal": prediction_result.get('signal', '观望'),
+                "trend": prediction_result.get('trend', '震荡'),
+                "confidence": prediction_result.get('confidence', 0),
+                "predicted_change": prediction_result.get('change_pct', 0),
+                "support_level": prediction_result.get('support', 0),
+                "pressure_level": prediction_result.get('resistance', 0),
+                
+                # 历史准确率
+                "historical_accuracy": prediction_result.get('historical_accuracy', 0),
+            },
+            "source": "akshare"
+        }
     except Exception as e:
         print(f"[WARN] akshare 数据源失败：{e}")
     
@@ -253,6 +240,10 @@ def format_prediction_message(report: dict) -> str:
     # 数据源标识
     source_tag = "🔄 简化版" if source == "tencent" else ""
     
+    # 历史准确率
+    historical_accuracy = data.get('historical_accuracy', 0)
+    history_tag = f"\n📈 历史准确率：{historical_accuracy:.1f}%" if historical_accuracy > 0 else ""
+    
     message = f"""{signal_icon}【{data['stock_name']} 预测报告】{source_tag}
 📅 日期：{data['date']}
 
@@ -261,16 +252,10 @@ def format_prediction_message(report: dict) -> str:
   涨跌幅：{data['change_pct']:+.2f}%
   成交量：{data['volume']/10000:.1f}万手
 
-📊 技术指标
-  MA5:  ¥{data['ma5']:.2f}  | MA10: ¥{data['ma10']:.2f}
-  MA20: ¥{data['ma20']:.2f}
-  MACD: {data['macd']:.2f}  | RSI: {data['rsi']:.1f}
-  KDJ:  K={data['kdj_k']:.1f} D={data['kdj_d']:.1f}
-
 🔮 趋势预测
   信号：{signal_icon} {signal}
   趋势：{data['trend']}
-  置信度：{confidence_level} ({confidence:.1f}%)
+  置信度：{confidence_level} ({confidence:.1f}%){history_tag}
   预计涨跌：{data['predicted_change']:+.2f}%
   
 📈 关键价位
@@ -278,7 +263,7 @@ def format_prediction_message(report: dict) -> str:
   压力位：¥{data['pressure_level']:.2f}
 
 ---
-🤖 AI 预测 | 仅供参考，不构成投资建议"""
+🤖 AI 预测 | 历史数据参考 | 仅供参考，不构成投资建议"""
 
     return message
 
@@ -347,42 +332,92 @@ def send_feishu_message(message: str) -> bool:
     return False
 
 def main():
-    """主函数"""
+    """主函数 - 为所有启用的股票生成预测并推送汇总"""
     print(f"🔮 股票预测推送 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*60)
     
-    stock_code = CONFIG['stock_code']
-    print(f"[INFO] 生成 {stock_code} 预测报告...")
+    stocks = CONFIG.get('stocks', [])
+    print(f"[INFO] 启用股票数量：{len(stocks)}")
     
-    report = generate_prediction_report(stock_code)
-    
-    if not report['success']:
-        print(f"[ERROR] 生成预测失败：{report['error']}")
+    if not stocks:
+        print("[ERROR] 没有启用的股票")
         return False
     
-    data = report['data']
-    source = report.get('source', 'akshare')
-    print(f"[INFO] 数据源：{source}")
-    print(f"[INFO] 当前股价：¥{data['current_price']:.2f} ({data['change_pct']:+.2f}%)")
-    print(f"[INFO] 预测信号：{data['signal']} (置信度：{data['confidence']:.1f}%)")
+    all_reports = []
     
-    # 格式化消息
-    message = format_prediction_message(report)
+    # 为每只股票生成预测报告
+    for stock in stocks:
+        stock_code = stock.get('code', '')
+        stock_name = stock.get('name', '')
+        
+        print(f"\n[INFO] 生成 {stock_name}({stock_code}) 预测报告...")
+        
+        report = generate_prediction_report(stock_code)
+        
+        if not report['success']:
+            print(f"[WARN] {stock_name} 生成预测失败：{report['error']}")
+            continue
+        
+        data = report['data']
+        source = report.get('source', 'akshare')
+        print(f"[INFO] 数据源：{source}")
+        print(f"[INFO] 当前股价：¥{data['current_price']:.2f} ({data['change_pct']:+.2f}%)")
+        print(f"[INFO] 预测信号：{data['signal']} (置信度：{data['confidence']:.1f}%)")
+        
+        # 写入单个文件
+        output_dir = Path(__file__).parent / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_file = output_dir / f"prediction_{stock_code}.txt"
+        message = format_prediction_message(report)
+        output_file.write_text(message, encoding='utf-8')
+        print(f"[INFO] 报告已写入：{output_file}")
+        
+        all_reports.append({
+            'stock': stock,
+            'report': report,
+            'message': message
+        })
     
-    # 写入文件
-    output_dir = Path(__file__).parent / "output"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / f"prediction_{stock_code}.txt"
-    output_file.write_text(message, encoding='utf-8')
-    print(f"[INFO] 报告已写入：{output_file}")
+    if not all_reports:
+        print("[ERROR] 所有股票预测生成失败")
+        return False
     
-    # 发送飞书
+    # 生成汇总消息并推送
+    print(f"\n[INFO] 生成汇总推送消息...")
+    summary_message = format_summary_message(all_reports)
+    print(summary_message)
+    
+    # 发送飞书汇总消息
     if CONFIG['feishu'].get('enabled'):
-        print(f"[INFO] 发送飞书消息...")
-        success = send_feishu_message(message)
+        print(f"\n[INFO] 发送飞书汇总消息...")
+        success = send_feishu_message(summary_message)
         return success
     
     return True
+
+
+def format_summary_message(all_reports: list) -> str:
+    """格式化汇总消息"""
+    today = datetime.now().strftime('%Y-%m-%d')
+    message = f"🔮 **股票预测汇总** - {today}\n\n"
+    
+    for item in all_reports:
+        stock = item['stock']
+        report = item['report']
+        data = report['data']
+        
+        signal_emoji = "🟢" if data['signal'] == '买入' else ("🔴" if data['signal'] == '卖出' else "🟡")
+        trend_emoji = "📈" if data['trend'] == '上涨' else ("📉" if data['trend'] == '下跌' else "➡️")
+        
+        message += f"**{stock['name']} ({stock['code']})**\n"
+        message += f"{signal_emoji} 信号：{data['signal']}\n"
+        message += f"{trend_emoji} 趋势：{data['trend']}\n"
+        message += f"🎯 置信度：{data['confidence']:.1f}%\n"
+        message += f"💰 支撑位：¥{data['support_level']:.2f} | 压力位：¥{data['pressure_level']:.2f}\n\n"
+    
+    message += "---\n⚠️ 预测仅供参考，不构成投资建议\n📊 数据源：akshare + 技术分析"
+    
+    return message
 
 if __name__ == "__main__":
     success = main()

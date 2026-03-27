@@ -8,8 +8,14 @@
 import akshare as ak
 import pandas as pd
 import numpy as np
-from datetime import datetime
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+# 配置
+PROJECT_ROOT = Path(__file__).parent.parent
+HISTORY_FILE = PROJECT_ROOT / "data" / "prediction_history.json"
 
 class StockPredictor:
     """股票预测器"""
@@ -18,7 +24,87 @@ class StockPredictor:
         self.stock_code = stock_code
         self.stock_name = "中兴通讯"
         self.data = None
+        self.history = self._load_prediction_history()
+    
+    def _load_prediction_history(self) -> Dict:
+        """加载预测历史记录"""
+        if not HISTORY_FILE.exists():
+            return {"version": 1, "predictions": []}
         
+        try:
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"[WARN] 加载预测历史失败：{e}")
+            return {"version": 1, "predictions": []}
+    
+    def _save_prediction_result(self, prediction_data: Dict):
+        """保存预测结果到历史记录"""
+        try:
+            # 确保 HISTORY_FILE 的目录存在
+            HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+            
+            # 添加时间戳
+            prediction_data['predicted_at'] = datetime.now().isoformat()
+            prediction_data['stock_code'] = self.stock_code
+            prediction_data['stock_name'] = self.stock_name
+            
+            # 添加到历史记录
+            self.history['predictions'].append(prediction_data)
+            
+            # 限制历史记录数量（最多保留 100 条）
+            if len(self.history['predictions']) > 100:
+                self.history['predictions'] = self.history['predictions'][-100:]
+            
+            # 保存到文件
+            with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
+                json.dump(self.history, f, ensure_ascii=False, indent=2)
+            
+            print(f"[INFO] 预测结果已保存到：{HISTORY_FILE}")
+        except Exception as e:
+            print(f"[WARN] 保存预测历史失败：{e}")
+    
+    def _get_historical_accuracy(self) -> Dict:
+        """获取该股票的历史预测准确率"""
+        stock_predictions = [
+            p for p in self.history.get('predictions', [])
+            if p.get('stock_code') == self.stock_code
+        ]
+        
+        if not stock_predictions:
+            return {"accuracy": 0, "total": 0, "correct": 0, "verified": 0}
+        
+        # 统计准确率（已验证的预测）
+        verified = [p for p in stock_predictions if p.get('actual_trend')]
+        if not verified:
+            return {"accuracy": 0, "total": len(stock_predictions), "correct": 0, "verified": 0}
+        
+        correct = sum(1 for p in verified if p.get('predicted_trend') == p.get('actual_trend'))
+        
+        return {
+            "accuracy": correct / len(verified) * 100 if verified else 0,
+            "total": len(stock_predictions),
+            "correct": correct,
+            "verified": len(verified)
+        }
+    
+    def _adjust_confidence_by_history(self, base_confidence: float) -> float:
+        """根据历史准确率调整置信度"""
+        accuracy_info = self._get_historical_accuracy()
+        
+        if accuracy_info['verified'] < 5:
+            # 历史数据不足，不调整
+            return base_confidence
+        
+        # 根据历史准确率调整置信度
+        accuracy_factor = accuracy_info['accuracy'] / 100.0
+        
+        # 如果历史准确率高，提高置信度；反之降低
+        adjusted = base_confidence * (0.8 + 0.4 * accuracy_factor)
+        
+        # 限制在 30%-95% 之间
+        return max(30.0, min(95.0, adjusted))
+    
     def fetch_history_data(self, days: int = 60) -> pd.DataFrame:
         """获取历史行情数据"""
         try:
@@ -219,14 +305,41 @@ class StockPredictor:
         # 价格预测
         prediction = self.predict_price(df, days=5)
         
-        return {
+        # 根据历史准确率调整置信度
+        base_confidence = prediction['confidence']
+        adjusted_confidence = self._adjust_confidence_by_history(base_confidence)
+        
+        # 获取历史准确率信息
+        accuracy_info = self._get_historical_accuracy()
+        
+        result = {
             "signal": trend_analysis['overall_signal'],
             "trend": trend_analysis['trend'],
-            "confidence": prediction['confidence'],
+            "confidence": adjusted_confidence,
+            "base_confidence": base_confidence,  # 原始置信度
+            "historical_accuracy": accuracy_info['accuracy'],  # 历史准确率
             "change_pct": prediction['change_pct'],
             "buy_signals": trend_analysis['buy_signals'],
             "sell_signals": trend_analysis['sell_signals'],
+            "support": prediction['support'],
+            "resistance": prediction['resistance'],
         }
+        
+        # 保存预测结果到历史记录
+        self._save_prediction_result({
+            "predicted_trend": trend_analysis['trend'],
+            "predicted_signal": trend_analysis['overall_signal'],
+            "predicted_confidence": adjusted_confidence,
+            "predicted_change_pct": prediction['change_pct'],
+            "support_level": prediction['support'],
+            "pressure_level": prediction['resistance'],
+            # 以下字段在后续验证时填充
+            "actual_trend": None,
+            "actual_change_pct": None,
+            "verified": False,
+        })
+        
+        return result
     
     def generate_report(self) -> str:
         """生成预测报告"""

@@ -227,6 +227,191 @@
 
 ---
 
+### Sprint 5 - 问题修复 (2026-03-27 10:20) ✅
+
+**主题：** Python 日志缓冲问题修复  
+**完成率：** 100% (1/1)  
+**工时：** 0.3 小时  
+**版本：** v5.2
+
+**问题描述：**
+- 10:00 的股票监控推送没有收到
+- Cron 日志显示任务已执行，但 `logs/push_cron.log` 为空（0 字节）
+- **根本原因：** Python 输出缓冲问题 - 当 Python 输出重定向到文件时，默认会缓冲输出，导致日志没有实时写入
+
+**修复内容：**
+- ✅ 在 crontab 中添加 `PYTHONUNBUFFERED=1` 环境变量
+- ✅ 更新 `config/crontab.template` 配置文件（v4 版本）
+- ✅ 提交到 Git 分支 `feature/cleanup-20260326`
+- ✅ 验证脚本手动执行推送正常
+
+**技术说明：**
+- `PYTHONUNBUFFERED=1` 强制 Python 不缓冲 stdout/stderr
+- 确保日志实时写入文件，便于问题排查
+- 同时更新了黄金监控和股票监控的所有 cron 任务
+
+**配置变更：**
+```cron
+# 修复前
+python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+
+# 修复后
+PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+```
+
+**推送时间表（共 10 次/交易日）：**
+| 时段 | 时间 |
+|------|------|
+| 上午 | 9:30, 10:00, 10:30, 11:00, 11:30 |
+| 下午 | 13:00, 13:30, 14:00, 14:30, 15:00 |
+
+---
+
+### Sprint 5 - 问题修复 (2026-03-27 11:17) ✅
+
+**主题：** Cron 环境变量问题修复  
+**完成率：** 100% (1/1)  
+**工时：** 0.3 小时  
+**版本：** v5.3
+
+**问题描述：**
+- 11:00 的股票监控推送没有收到
+- Cron 日志显示任务执行了，但脚本没有输出
+- `output/` 目录没有 11:00 生成的文件
+- **根本原因：** `source venv/bin/activate` 在 cron 环境中没有正确激活虚拟环境
+
+**修复内容：**
+- ✅ 使用虚拟环境的绝对路径 `./venv/bin/python3`
+- ✅ 移除 `source venv/bin/activate` 命令
+- ✅ 更新 `config/crontab.template` 配置文件（v5 版本）
+- ✅ 提交到 Git 分支 `feature/cleanup-20260326`
+
+**配置变更：**
+```cron
+# 修复前 (v4)
+cd {{PROJECT_ROOT}} && source venv/bin/activate && PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+
+# 修复后 (v5)
+cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+```
+
+**影响范围：**
+- 股票监控：4 个时间段，共 6 条 cron 规则
+- 黄金监控：2 个时间段，共 2 条 cron 规则
+
+**下次执行时间：**
+- 11:30（约 13 分钟后）- 将验证修复效果
+
+---
+
+### Sprint 5 - 功能增强 (2026-03-27 19:04) ✅
+
+**主题：** 预测功能与股票配置关联  
+**完成率：** 100% (1/1)  
+**工时：** 0.5 小时  
+**版本：** v5.4
+
+**问题描述：**
+- 预测推送脚本 (`prediction_push.py`) 硬编码只处理第一只股票
+- 监控配置 (`stocks_config.json`) 有 4 只股票，但预测不同步
+- 需要手动修改代码才能更改预测的股票
+
+**修复内容：**
+- ✅ 修改 `load_stock_config()` 返回所有启用的股票列表
+- ✅ 遍历所有启用的股票生成预测报告
+- ✅ 为每只股票生成独立的预测文件
+- ✅ 新增 `format_summary_message()` 函数生成汇总消息
+- ✅ 一次性推送所有股票的预测汇总
+
+**配置变更：**
+```python
+# 修复前
+def load_stock_config() -> dict:
+    return stocks[0]  # 只返回第一只股票
+
+# 修复后
+def load_stock_config() -> list:
+    return [s for s in stocks if s.get('enabled', True)]  # 返回所有启用的股票
+```
+
+**交付成果：**
+1. 每只股票独立的预测报告文件 (`prediction_XXXXXX.txt`)
+2. 汇总消息推送（包含所有股票的信号、趋势、置信度、支撑/压力位）
+3. 自动同步 `stocks_config.json` 中的启用状态
+
+**推送内容示例：**
+```
+🔮 **股票预测汇总** - 2026-03-27
+
+**中兴通讯 (000063)**
+🟡 信号：观望
+📉 趋势：下跌
+🎯 置信度：65.2%
+💰 支撑位：¥32.05 | 压力位：¥40.20
+
+**紫金矿业 (601899)**
+...
+```
+
+---
+
+### Sprint 5 - 功能增强 (2026-03-27 22:59) ✅
+
+**主题：** 预测历史记录与准确率验证  
+**完成率：** 100% (1/1)  
+**工时：** 1 小时  
+**版本：** v5.5
+
+**功能描述：**
+- 每次预测自动保存到 `data/prediction_history.json`
+- 根据历史准确率动态调整置信度
+- 次日自动验证预测准确性
+- 最多保留 100 条历史记录
+
+**新增文件：**
+1. `scripts/verify_predictions.py` - 验证脚本
+2. `data/prediction_history.json` - 历史记录存储
+
+**修改文件：**
+1. `scripts/stock_predictor.py` - 添加历史记录功能
+2. `scripts/prediction_push.py` - 使用 predict() 方法保存历史
+
+**核心方法：**
+- `_load_prediction_history()` - 加载历史记录
+- `_save_prediction_result()` - 保存预测结果
+- `_get_historical_accuracy()` - 获取历史准确率
+- `_adjust_confidence_by_history()` - 根据历史调整置信度
+
+**工作流程：**
+```
+1. 生成预测 → 保存到历史记录
+2. 次日验证 → 获取实际股价 → 对比预测趋势
+3. 更新记录 → 标记为已验证 → 记录准确性
+4. 下次预测 → 读取历史准确率 → 调整置信度
+```
+
+**置信度调整公式：**
+```python
+# 历史数据不足 5 条时，不调整
+if verified < 5:
+    return base_confidence
+
+# 根据历史准确率调整
+adjusted = base_confidence * (0.8 + 0.4 * accuracy_factor)
+# 限制在 30%-95% 之间
+```
+
+**验证脚本使用：**
+```bash
+# 手动验证昨天的预测
+./venv/bin/python3 scripts/verify_predictions.py
+
+# 或添加到 crontab（每个交易日 9:00）
+0 9 * * 1-5 cd {{PROJECT_ROOT}} && ./venv/bin/python3 scripts/verify_predictions.py >> logs/verify.log 2>&1
+```
+
+---
+
 ### Sprint 5 - 项目清理 (2026-03-26 21:55) ✅
 
 **主题：** 清理过时文件和临时文档  
