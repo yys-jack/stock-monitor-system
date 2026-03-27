@@ -227,6 +227,46 @@
 
 ---
 
+### Sprint 5 - 问题修复 (2026-03-27 10:20) ✅
+
+**主题：** Python 日志缓冲问题修复  
+**完成率：** 100% (1/1)  
+**工时：** 0.3 小时  
+**版本：** v5.2
+
+**问题描述：**
+- 10:00 的股票监控推送没有收到
+- Cron 日志显示任务已执行，但 `logs/push_cron.log` 为空（0 字节）
+- **根本原因：** Python 输出缓冲问题 - 当 Python 输出重定向到文件时，默认会缓冲输出，导致日志没有实时写入
+
+**修复内容：**
+- ✅ 在 crontab 中添加 `PYTHONUNBUFFERED=1` 环境变量
+- ✅ 更新 `config/crontab.template` 配置文件（v4 版本）
+- ✅ 提交到 Git 分支 `feature/cleanup-20260326`
+- ✅ 验证脚本手动执行推送正常
+
+**技术说明：**
+- `PYTHONUNBUFFERED=1` 强制 Python 不缓冲 stdout/stderr
+- 确保日志实时写入文件，便于问题排查
+- 同时更新了黄金监控和股票监控的所有 cron 任务
+
+**配置变更：**
+```cron
+# 修复前
+python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+
+# 修复后
+PYTHONUNBUFFERED=1 python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+```
+
+**推送时间表（共 10 次/交易日）：**
+| 时段 | 时间 |
+|------|------|
+| 上午 | 9:30, 10:00, 10:30, 11:00, 11:30 |
+| 下午 | 13:00, 13:30, 14:00, 14:30, 15:00 |
+
+---
+
 ### Sprint 5 - 项目清理 (2026-03-26 21:55) ✅
 
 **主题：** 清理过时文件和临时文档  
