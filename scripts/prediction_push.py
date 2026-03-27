@@ -104,57 +104,46 @@ def fetch_stock_price_tencent(code: str) -> Optional[Dict]:
 
 def generate_prediction_report(stock_code: str) -> dict:
     """生成预测报告（带备用数据源）"""
-    # 首先尝试使用 akshare 获取完整数据
+    # 使用 StockPredictor 的 predict 方法（会保存历史记录）
     try:
         from stock_predictor import StockPredictor
         predictor = StockPredictor(stock_code)
         
-        # 获取数据
-        df = predictor.fetch_history_data(days=60)
-        if not df.empty:
-            # 计算指标
-            df = predictor.calculate_ma(df)
-            df = predictor.calculate_macd(df)
-            df = predictor.calculate_rsi(df)
-            df = predictor.calculate_kdj(df)
-            df = predictor.calculate_boll(df)
-            
-            # 趋势分析
-            trend_analysis = predictor.analyze_trend(df)
-            prediction = predictor.predict_price(df, days=5)
-            
-            # 获取最新数据
-            latest = df.iloc[-1]
-            
+        # 获取预测结果（会自动保存到历史记录）
+        prediction_result = predictor.predict()
+        
+        # 获取当前股价
+        price_data = fetch_stock_price_tencent(stock_code)
+        if not price_data:
             return {
-                "success": True,
-                "data": {
-                    "stock_code": stock_code,
-                    "stock_name": predictor.stock_name,
-                    "date": datetime.now().strftime('%Y-%m-%d'),
-                    "current_price": float(latest.get('收盘', 0)),
-                    "change_pct": float(latest.get('涨跌幅', 0)),
-                    "volume": int(latest.get('成交量', 0)),
-                    
-                    # 技术指标
-                    "ma5": float(latest.get('MA5', 0)),
-                    "ma10": float(latest.get('MA10', 0)),
-                    "ma20": float(latest.get('MA20', 0)),
-                    "macd": float(latest.get('MACD', 0)),
-                    "rsi": float(latest.get('RSI', 0)),
-                    "kdj_k": float(latest.get('K', 0)),
-                    "kdj_d": float(latest.get('D', 0)),
-                    
-                    # 预测结果
-                    "signal": trend_analysis.get('overall_signal', '中性'),
-                    "trend": trend_analysis.get('trend', '震荡'),
-                    "confidence": prediction.get('confidence', 0),
-                    "predicted_change": prediction.get('change_pct', 0),
-                    "support_level": prediction.get('support', 0),
-                    "pressure_level": prediction.get('resistance', 0),
-                },
-                "source": "akshare"
+                "success": False,
+                "error": "获取股价失败",
+                "data": {}
             }
+        
+        return {
+            "success": True,
+            "data": {
+                "stock_code": stock_code,
+                "stock_name": predictor.stock_name,
+                "date": datetime.now().strftime('%Y-%m-%d'),
+                "current_price": price_data['current'],
+                "change_pct": price_data['change_pct'],
+                "volume": price_data.get('volume', 0),
+                
+                # 预测结果
+                "signal": prediction_result.get('signal', '观望'),
+                "trend": prediction_result.get('trend', '震荡'),
+                "confidence": prediction_result.get('confidence', 0),
+                "predicted_change": prediction_result.get('change_pct', 0),
+                "support_level": prediction_result.get('support', 0),
+                "pressure_level": prediction_result.get('resistance', 0),
+                
+                # 历史准确率
+                "historical_accuracy": prediction_result.get('historical_accuracy', 0),
+            },
+            "source": "akshare"
+        }
     except Exception as e:
         print(f"[WARN] akshare 数据源失败：{e}")
     
@@ -251,6 +240,10 @@ def format_prediction_message(report: dict) -> str:
     # 数据源标识
     source_tag = "🔄 简化版" if source == "tencent" else ""
     
+    # 历史准确率
+    historical_accuracy = data.get('historical_accuracy', 0)
+    history_tag = f"\n📈 历史准确率：{historical_accuracy:.1f}%" if historical_accuracy > 0 else ""
+    
     message = f"""{signal_icon}【{data['stock_name']} 预测报告】{source_tag}
 📅 日期：{data['date']}
 
@@ -259,16 +252,10 @@ def format_prediction_message(report: dict) -> str:
   涨跌幅：{data['change_pct']:+.2f}%
   成交量：{data['volume']/10000:.1f}万手
 
-📊 技术指标
-  MA5:  ¥{data['ma5']:.2f}  | MA10: ¥{data['ma10']:.2f}
-  MA20: ¥{data['ma20']:.2f}
-  MACD: {data['macd']:.2f}  | RSI: {data['rsi']:.1f}
-  KDJ:  K={data['kdj_k']:.1f} D={data['kdj_d']:.1f}
-
 🔮 趋势预测
   信号：{signal_icon} {signal}
   趋势：{data['trend']}
-  置信度：{confidence_level} ({confidence:.1f}%)
+  置信度：{confidence_level} ({confidence:.1f}%){history_tag}
   预计涨跌：{data['predicted_change']:+.2f}%
   
 📈 关键价位
@@ -276,7 +263,7 @@ def format_prediction_message(report: dict) -> str:
   压力位：¥{data['pressure_level']:.2f}
 
 ---
-🤖 AI 预测 | 仅供参考，不构成投资建议"""
+🤖 AI 预测 | 历史数据参考 | 仅供参考，不构成投资建议"""
 
     return message
 
