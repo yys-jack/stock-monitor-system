@@ -355,6 +355,63 @@ def load_stock_config() -> list:
 
 ---
 
+### Sprint 5 - 功能增强 (2026-03-27 22:59) ✅
+
+**主题：** 预测历史记录与准确率验证  
+**完成率：** 100% (1/1)  
+**工时：** 1 小时  
+**版本：** v5.5
+
+**功能描述：**
+- 每次预测自动保存到 `data/prediction_history.json`
+- 根据历史准确率动态调整置信度
+- 次日自动验证预测准确性
+- 最多保留 100 条历史记录
+
+**新增文件：**
+1. `scripts/verify_predictions.py` - 验证脚本
+2. `data/prediction_history.json` - 历史记录存储
+
+**修改文件：**
+1. `scripts/stock_predictor.py` - 添加历史记录功能
+2. `scripts/prediction_push.py` - 使用 predict() 方法保存历史
+
+**核心方法：**
+- `_load_prediction_history()` - 加载历史记录
+- `_save_prediction_result()` - 保存预测结果
+- `_get_historical_accuracy()` - 获取历史准确率
+- `_adjust_confidence_by_history()` - 根据历史调整置信度
+
+**工作流程：**
+```
+1. 生成预测 → 保存到历史记录
+2. 次日验证 → 获取实际股价 → 对比预测趋势
+3. 更新记录 → 标记为已验证 → 记录准确性
+4. 下次预测 → 读取历史准确率 → 调整置信度
+```
+
+**置信度调整公式：**
+```python
+# 历史数据不足 5 条时，不调整
+if verified < 5:
+    return base_confidence
+
+# 根据历史准确率调整
+adjusted = base_confidence * (0.8 + 0.4 * accuracy_factor)
+# 限制在 30%-95% 之间
+```
+
+**验证脚本使用：**
+```bash
+# 手动验证昨天的预测
+./venv/bin/python3 scripts/verify_predictions.py
+
+# 或添加到 crontab（每个交易日 9:00）
+0 9 * * 1-5 cd {{PROJECT_ROOT}} && ./venv/bin/python3 scripts/verify_predictions.py >> logs/verify.log 2>&1
+```
+
+---
+
 ### Sprint 5 - 项目清理 (2026-03-26 21:55) ✅
 
 **主题：** 清理过时文件和临时文档  
