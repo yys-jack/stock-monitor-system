@@ -569,13 +569,11 @@ git push origin main
 | 文档 | 说明 |
 |------|------|
 | [⚡ QUICKSTART.md](QUICKSTART.md) | 5 分钟快速上手 |
-| [📦 DEPLOYMENT.md](DEPLOYMENT.md) | 生产环境部署指南 |
-| [📁 PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | 项目结构说明 |
-| [📝 CONTRIBUTING.md](CONTRIBUTING.md) | 代码贡献指南 |
-| [📋 CHANGELOG.md](CHANGELOG.md) | 版本更新日志 |
+| [📦 DEPLOYMENT.md](DEPLOYMENT.md) | 部署指南 |
+| [📁 PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | 项目结构 |
+| [📝 CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
+| [📋 CHANGELOG.md](CHANGELOG.md) | 更新日志 |
 | [🗺️ ROADMAP.md](ROADMAP.md) | 版本路线图 |
-| [🛠️ TECH_STACK.md](TECH_STACK.md) | 技术栈说明 |
-| [🧪 TESTING.md](TESTING.md) | 测试指南 |
 
 ---
 

@@ -1,37 +1,31 @@
 # 更新日志
 
-所有重要的项目变更都将记录在此文件中。
-
-格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
-版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+格式遵循 [Keep a Changelog](https://keepachangelog.com/)，版本遵循 [语义化版本](https://semver.org/)。
 
 ---
 
-## [未发布]
+## [5.6.0] - 2026-03-28
 
 ### Added
-- 添加 `pyproject.toml` 支持现代化 Python 项目管理
-- 添加 `Makefile` 提供常用命令快捷方式
-- 添加 `Dockerfile` 和 `.dockerignore` 支持容器化部署
-- 添加 GitHub Actions CI/CD 工作流
-- 添加 `logging_config.py` 统一日志配置
-- 添加 `config_loader.py` 统一配置加载器
-- 添加 `.pre-commit-config.yaml` 代码提交前检查
-- 添加 `CONTRIBUTING.md` 贡献指南
-- 添加 `QUICKSTART.md` 快速开始指南
-- 添加 `LICENSE` MIT 许可证
-- 添加配置文件示例 (`stocks_config.example.json`, `feishu_config.example.json`)
-- 添加 `.env.example` 环境变量模板
+- `pyproject.toml` 现代化 Python 项目配置
+- `Makefile` 常用命令快捷方式
+- `Dockerfile` 容器化部署支持
+- GitHub Actions CI/CD 工作流
+- `logging_config.py` 统一日志配置
+- `config_loader.py` 统一配置加载器
+- 单元测试框架 (`scripts/tests/`)
+- `.pre-commit-config.yaml` 代码提交检查
+- 配置模板和 `.env.example`
+- 文档：CONTRIBUTING, QUICKSTART, DEPLOYMENT
 
 ### Changed
-- 更新 `requirements.txt` 添加完整依赖列表
-- 更新 `.gitignore` 添加更多忽略规则
+- 完善 `requirements.txt` 依赖列表
+- 更新 `.gitignore` 忽略规则
+- 代码格式化 (Black + Ruff)
 
-### Improved
-- 项目结构更加规范化
-- 支持 Docker 容器化部署
-- 支持 CI/CD 自动化测试和部署
-- 改进配置管理，支持缓存和环境变量
+### Removed
+- 删除临时文档 (OPTIMIZATION_SUMMARY, POSTMORTEM, PUSH_INVESTIGATION)
+- 删除冗余文档 (AGILE_DEVELOPMENT, GIT_WORKFLOW, TESTING, TECH_STACK)
 
 ---
 
@@ -47,7 +41,6 @@
 
 ### Added
 - 多股票预测推送支持
-- 与 stocks_config.json 关联
 
 ---
 
@@ -58,26 +51,16 @@
 
 ---
 
-## [5.2.0] - 2026-03-25
-
-### Added
-- 添加 PYTHONUNBUFFERED=1 解决日志缓冲问题
-- 黄金价格监控功能
-
----
-
 ## [5.0.0] - 2026-03-10
 
 ### Added
 - 基础股票监控系统
-- 飞书推送
-- Web 界面
-- 定时任务支持
+- 飞书推送、Web 界面、定时任务
 
 ---
 
 ## 版本说明
 
-- **主版本号 (Major)**: 不兼容的 API 变更
-- **次版本号 (Minor)**: 向后兼容的功能新增
-- **修订号 (Patch)**: 向后兼容的问题修复
+- **Major:** 不兼容的 API 变更
+- **Minor:** 向后兼容的功能新增
+- **Patch:** 向后兼容的问题修复
