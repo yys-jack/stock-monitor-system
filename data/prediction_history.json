@@ -477,6 +477,62 @@
       "predicted_at": "2026-03-29T02:06:50.403330",
       "stock_code": "002241",
       "stock_name": ""
+    },
+    {
+      "predicted_trend": "下跌",
+      "predicted_signal": "观望",
+      "predicted_confidence": 0.0,
+      "predicted_change_pct": 0.0,
+      "support_level": 0.0,
+      "pressure_level": 0.0,
+      "actual_trend": null,
+      "actual_change_pct": null,
+      "verified": false,
+      "predicted_at": "2026-03-29T02:14:50.672941",
+      "stock_code": "000063",
+      "stock_name": ""
+    },
+    {
+      "predicted_trend": "上涨",
+      "predicted_signal": "观望",
+      "predicted_confidence": 0.0,
+      "predicted_change_pct": 0.0,
+      "support_level": 0.0,
+      "pressure_level": 0.0,
+      "actual_trend": null,
+      "actual_change_pct": null,
+      "verified": false,
+      "predicted_at": "2026-03-29T02:14:50.806681",
+      "stock_code": "601899",
+      "stock_name": ""
+    },
+    {
+      "predicted_trend": "上涨",
+      "predicted_signal": "观望",
+      "predicted_confidence": 0.0,
+      "predicted_change_pct": 0.0,
+      "support_level": 0.0,
+      "pressure_level": 0.0,
+      "actual_trend": null,
+      "actual_change_pct": null,
+      "verified": false,
+      "predicted_at": "2026-03-29T02:14:50.934901",
+      "stock_code": "600416",
+      "stock_name": ""
+    },
+    {
+      "predicted_trend": "下跌",
+      "predicted_signal": "观望",
+      "predicted_confidence": 0.0,
+      "predicted_change_pct": 0.0,
+      "support_level": 0.0,
+      "pressure_level": 0.0,
+      "actual_trend": null,
+      "actual_change_pct": null,
+      "verified": false,
+      "predicted_at": "2026-03-29T02:14:51.061279",
+      "stock_code": "002241",
+      "stock_name": ""
     }
   ]
 }

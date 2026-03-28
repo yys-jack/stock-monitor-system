@@ -131,7 +131,7 @@ class TestStockPredictor(unittest.TestCase):
         self.assertIn("trend", result)
         self.assertIn("change_pct", result)
         self.assertIn("support", result)
-        self.assertIn("resistance", result)
+        self.assertIn("pressure_level", result)
 
     def test_historical_accuracy_empty(self):
         """测试空历史准确率"""

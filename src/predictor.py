@@ -325,7 +325,7 @@ class StockPredictor:
                 "predicted_confidence": adjusted_confidence,
                 "predicted_change_pct": prediction["change_pct"],
                 "support_level": prediction["support"],
-                "pressure_level": prediction["resistance"],
+                "pressure_level": prediction["pressure_level"],
                 "actual_trend": None,
                 "actual_change_pct": None,
                 "verified": False,

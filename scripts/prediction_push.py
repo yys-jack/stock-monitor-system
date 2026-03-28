@@ -138,7 +138,7 @@ def generate_prediction_report(stock_code: str) -> dict:
                 "predicted_change": prediction_result.get("change_pct", 0),
                 # 支撑/压力位（预测失败时使用估算值）
                 "support_level": prediction_result.get("support", 0) or current_price * 0.97,
-                "pressure_level": prediction_result.get("resistance", 0) or current_price * 1.03,
+                "pressure_level": prediction_result.get("pressure_level", 0) or current_price * 1.03,
                 # 历史准确率
                 "historical_accuracy": prediction_result.get("historical_accuracy", 0),
             },
