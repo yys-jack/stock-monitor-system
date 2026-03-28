@@ -3,13 +3,20 @@
 API 路由模块
 """
 
+import sys
 from datetime import datetime
+from pathlib import Path
 
 from flask import Blueprint, jsonify, request
 
-from webapp.services.predictor import PredictorService
-from webapp.services.stock_service import stock_service
-from webapp.utils.config_loader import load_stocks_config, save_stocks_config
+# 添加 src 到路径
+src_path = Path(__file__).parent.parent.parent / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
+from src.config_loader import config_loader
+from src.predictor import StockPredictor
+from src.stock_service import stock_service
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -17,7 +24,7 @@ api = Blueprint("api", __name__, url_prefix="/api")
 @api.route("/stock/<code>", methods=["GET"])
 def get_stock(code):
     """获取股票实时数据"""
-    stocks = load_stocks_config().get("stocks", [])
+    stocks = config_loader.load_stocks_config().get("stocks", []) if config_loader.load_stocks_config() else []
     stock_info = next((s for s in stocks if s["code"] == code), None)
 
     if not stock_info:
@@ -57,7 +64,7 @@ def get_history(code):
 @api.route("/overview", methods=["GET"])
 def get_overview():
     """获取概览数据"""
-    stocks = load_stocks_config().get("stocks", [])
+    stocks = config_loader.load_stocks_config().get("stocks", []) if config_loader.load_stocks_config() else []
     overview = stock_service.fetch_overview(stocks)
 
     return jsonify({"success": True, "data": overview})
@@ -67,8 +74,8 @@ def get_overview():
 def get_predict(code):
     """获取预测数据"""
     try:
-        predictor = PredictorService(code)
-        result = predictor.get_prediction()
+        predictor = StockPredictor(code)
+        result = predictor.predict()
 
         return jsonify({"success": True, "data": result})
     except Exception as e:
@@ -79,7 +86,7 @@ def get_predict(code):
 def get_predict_report(code):
     """获取预测报告（文本）"""
     try:
-        predictor = PredictorService(code)
+        predictor = StockPredictor(code)
         report = predictor.generate_report()
 
         return jsonify({"success": True, "data": {"report": report}})
@@ -90,7 +97,8 @@ def get_predict_report(code):
 @api.route("/stocks", methods=["GET"])
 def get_stocks():
     """获取股票配置列表"""
-    stocks = load_stocks_config().get("stocks", [])
+    config = config_loader.load_stocks_config()
+    stocks = config.get("stocks", []) if config else []
     return jsonify({"success": True, "data": stocks})
 
 
@@ -108,7 +116,9 @@ def add_stock():
         if not code or not name:
             return jsonify({"success": False, "error": "股票代码和名称不能为空"}), 400
 
-        config = load_stocks_config()
+        config = config_loader.load_stocks_config()
+        if not config:
+            config = {"stocks": [], "settings": {}}
 
         # 检查是否已存在
         for stock in config.get("stocks", []):
@@ -128,7 +138,7 @@ def add_stock():
         config["updated_at"] = datetime.now().strftime("%Y-%m-%d")
         config["version"] = config.get("version", 1) + 1
 
-        if not save_stocks_config(config):
+        if not config_loader.save_config("stocks_config.json", config):
             return jsonify({"success": False, "error": "保存配置失败"}), 500
 
         return jsonify(
@@ -142,7 +152,9 @@ def add_stock():
 def delete_stock(code):
     """删除股票"""
     try:
-        config = load_stocks_config()
+        config = config_loader.load_stocks_config()
+        if not config:
+            return jsonify({"success": False, "error": f"股票 {code} 不存在"}), 404
 
         # 查找并删除
         found = False
@@ -160,7 +172,7 @@ def delete_stock(code):
         config["updated_at"] = datetime.now().strftime("%Y-%m-%d")
         config["version"] = config.get("version", 1) + 1
 
-        if not save_stocks_config(config):
+        if not config_loader.save_config("stocks_config.json", config):
             return jsonify({"success": False, "error": "保存配置失败"}), 500
 
         return jsonify({"success": True, "message": f"已删除股票 {code}"})
@@ -172,7 +184,9 @@ def delete_stock(code):
 def toggle_stock(code):
     """切换股票启用状态"""
     try:
-        config = load_stocks_config()
+        config = config_loader.load_stocks_config()
+        if not config:
+            return jsonify({"success": False, "error": f"股票 {code} 不存在"}), 404
 
         found = False
         for stock in config.get("stocks", []):
@@ -188,7 +202,7 @@ def toggle_stock(code):
         config["updated_at"] = datetime.now().strftime("%Y-%m-%d")
         config["version"] = config.get("version", 1) + 1
 
-        if not save_stocks_config(config):
+        if not config_loader.save_config("stocks_config.json", config):
             return jsonify({"success": False, "error": "保存配置失败"}), 500
 
         return jsonify(
