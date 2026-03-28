@@ -11,6 +11,9 @@ from typing import Dict, Optional
 
 import requests
 
+from src.predictor import StockPredictor
+from src.config_loader import config_loader
+
 # 配置
 PROJECT_ROOT = Path(__file__).parent.parent
 CONFIG_FILE = PROJECT_ROOT / "config" / "feishu_config.json"
@@ -109,7 +112,7 @@ def generate_prediction_report(stock_code: str) -> dict:
     """生成预测报告（带备用数据源）"""
     # 使用 StockPredictor 的 predict 方法（会保存历史记录）
     try:
-        from stock_predictor import StockPredictor
+        from src.predictor import StockPredictor
 
         predictor = StockPredictor(stock_code)
 
