@@ -5,11 +5,20 @@
 """
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import requests
+
+# 添加 src 到路径
+src_path = Path(__file__).parent.parent / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
+from gold_service import GoldService, gold_service
+from feishu import FeishuNotifier
 
 # 配置
 PROJECT_ROOT = Path(__file__).parent.parent

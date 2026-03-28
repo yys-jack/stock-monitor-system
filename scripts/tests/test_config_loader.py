@@ -7,10 +7,12 @@ import sys
 import unittest
 from pathlib import Path
 
-# 添加父目录到路径
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# 添加 src 到路径
+src_path = Path(__file__).parent.parent.parent / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
 
-from config_loader import ConfigLoader
+from src.config_loader import ConfigLoader
 
 
 class TestConfigLoader(unittest.TestCase):
