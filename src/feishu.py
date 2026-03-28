@@ -19,7 +19,8 @@ class FeishuNotifier:
 
     def __init__(self):
         config = load_feishu_config()
-        feishu_cfg = config.get("feishu", {}) if config else {}
+        # load_feishu_config 已经返回 feishu 配置，不需要再 .get("feishu", {})
+        feishu_cfg = config if config else {}
 
         self.enabled = feishu_cfg.get("enabled", False)
         self.user_id = feishu_cfg.get("user_id", "")
@@ -76,13 +77,15 @@ class FeishuNotifier:
             return False
 
         url = "https://open.feishu.cn/open-apis/im/v1/messages"
+        params = {"receive_id_type": "open_id"}
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
-        payload = {"receive_id": target_user, "msg_type": "text", "content": {"text": content}}
+        import json
+        payload = {"receive_id": target_user, "msg_type": "text", "content": json.dumps({"text": content})}
 
         for attempt in range(self.retry_times):
             try:
-                resp = requests.post(url, headers=headers, json=payload, timeout=10)
+                resp = requests.post(url, headers=headers, params=params, json=payload, timeout=10)
                 resp.raise_for_status()
 
                 data = resp.json()
@@ -115,14 +118,16 @@ class FeishuNotifier:
             return False
 
         url = "https://open.feishu.cn/open-apis/im/v1/messages"
+        params = {"receive_id_type": "open_id"}
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
+        import json
         post_content = {"zh_cn": {"title": title, "content": content_list}}
-        payload = {"receive_id": target_user, "msg_type": "post", "content": post_content}
+        payload = {"receive_id": target_user, "msg_type": "post", "content": json.dumps(post_content)}
 
         for attempt in range(self.retry_times):
             try:
-                resp = requests.post(url, headers=headers, json=payload, timeout=10)
+                resp = requests.post(url, headers=headers, params=params, json=payload, timeout=10)
                 resp.raise_for_status()
 
                 data = resp.json()

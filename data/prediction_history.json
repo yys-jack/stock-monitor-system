@@ -71,6 +71,48 @@
       "predicted_at": "2026-03-27T22:59:06.270084",
       "stock_code": "002241",
       "stock_name": "中兴通讯"
+    },
+    {
+      "predicted_trend": "上涨",
+      "predicted_signal": "卖出",
+      "predicted_confidence": 100.0,
+      "predicted_change_pct": 2.5,
+      "support_level": 10.0,
+      "pressure_level": 15.9,
+      "actual_trend": null,
+      "actual_change_pct": null,
+      "verified": false,
+      "predicted_at": "2026-03-28T22:21:35.295772",
+      "stock_code": "000063",
+      "stock_name": ""
+    },
+    {
+      "predicted_trend": "上涨",
+      "predicted_signal": "卖出",
+      "predicted_confidence": 100.0,
+      "predicted_change_pct": 2.5,
+      "support_level": 10.0,
+      "pressure_level": 15.9,
+      "actual_trend": null,
+      "actual_change_pct": null,
+      "verified": false,
+      "predicted_at": "2026-03-28T22:21:55.832464",
+      "stock_code": "000063",
+      "stock_name": ""
+    },
+    {
+      "predicted_trend": "上涨",
+      "predicted_signal": "卖出",
+      "predicted_confidence": 100.0,
+      "predicted_change_pct": 2.5,
+      "support_level": 10.0,
+      "pressure_level": 15.9,
+      "actual_trend": null,
+      "actual_change_pct": null,
+      "verified": false,
+      "predicted_at": "2026-03-28T22:23:21.345756",
+      "stock_code": "000063",
+      "stock_name": ""
     }
   ]
 }
