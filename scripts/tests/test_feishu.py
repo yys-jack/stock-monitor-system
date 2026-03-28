@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 # 添加 src 到路径
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from src.feishu import FeishuNotifier, notifier, send_text, send_post
+from src.feishu import FeishuNotifier, notifier, send_post, send_text
 
 
 class TestFeishuNotifier(unittest.TestCase):

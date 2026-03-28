@@ -237,17 +237,17 @@ class StockPredictor:
             from sklearn.linear_model import LinearRegression
 
             df["Day"] = range(len(df))
-            X = df[["Day"]].values
-            y = df["收盘"].values
+            x_data = df[["Day"]].values
+            y_data = df["收盘"].values
 
             model = LinearRegression()
-            model.fit(X, y)
+            model.fit(x_data, y_data)
 
             last_day = df["Day"].iloc[-1]
             future_days = np.array([[last_day + i] for i in range(1, days + 1)])
             predictions = model.predict(future_days)
 
-            r2_score = model.score(X, y)
+            r2_score = model.score(x_data, y_data)
             confidence = round(r2_score * 100, 2)
 
             trend = "上涨" if predictions[-1] > predictions[0] else "下跌"

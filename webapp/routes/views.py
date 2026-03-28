@@ -3,8 +3,6 @@
 页面路由模块
 """
 
-from pathlib import Path
-
 from flask import Blueprint, render_template
 
 from src.config_loader import config_loader

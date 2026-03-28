@@ -10,7 +10,7 @@ def create_app():
     app = Flask(__name__)
 
     # 配置
-    app.config['JSON_AS_ASCII'] = False  # 支持中文 JSON
+    app.config["JSON_AS_ASCII"] = False  # 支持中文 JSON
 
     # 注册蓝图
     from webapp.routes.api import api
@@ -22,10 +22,10 @@ def create_app():
     # 错误处理
     @app.errorhandler(404)
     def not_found(error):
-        return {'success': False, 'error': 'Not Found'}, 404
+        return {"success": False, "error": "Not Found"}, 404
 
     @app.errorhandler(500)
     def internal_error(error):
-        return {'success': False, 'error': 'Internal Server Error'}, 500
+        return {"success": False, "error": "Internal Server Error"}, 500
 
     return app

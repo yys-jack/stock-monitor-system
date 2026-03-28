@@ -81,7 +81,12 @@ class FeishuNotifier:
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
         import json
-        payload = {"receive_id": target_user, "msg_type": "text", "content": json.dumps({"text": content})}
+
+        payload = {
+            "receive_id": target_user,
+            "msg_type": "text",
+            "content": json.dumps({"text": content}),
+        }
 
         for attempt in range(self.retry_times):
             try:
@@ -122,8 +127,13 @@ class FeishuNotifier:
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
         import json
+
         post_content = {"zh_cn": {"title": title, "content": content_list}}
-        payload = {"receive_id": target_user, "msg_type": "post", "content": json.dumps(post_content)}
+        payload = {
+            "receive_id": target_user,
+            "msg_type": "post",
+            "content": json.dumps(post_content),
+        }
 
         for attempt in range(self.retry_times):
             try:
@@ -138,7 +148,9 @@ class FeishuNotifier:
                     print(f"[ERROR] 飞书 Post 消息推送失败：{data}")
 
             except Exception as e:
-                print(f"[ERROR] 飞书 Post 消息推送异常 (尝试 {attempt + 1}/{self.retry_times}): {e}")
+                print(
+                    f"[ERROR] 飞书 Post 消息推送异常 (尝试 {attempt + 1}/{self.retry_times}): {e}"
+                )
                 if attempt < self.retry_times - 1:
                     time.sleep(self.retry_delay)
 

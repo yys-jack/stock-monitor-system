@@ -4,7 +4,6 @@ API 路由模块
 """
 
 from datetime import datetime
-from pathlib import Path
 
 from flask import Blueprint, jsonify, request
 
@@ -18,7 +17,11 @@ api = Blueprint("api", __name__, url_prefix="/api")
 @api.route("/stock/<code>", methods=["GET"])
 def get_stock(code):
     """获取股票实时数据"""
-    stocks = config_loader.load_stocks_config().get("stocks", []) if config_loader.load_stocks_config() else []
+    stocks = (
+        config_loader.load_stocks_config().get("stocks", [])
+        if config_loader.load_stocks_config()
+        else []
+    )
     stock_info = next((s for s in stocks if s["code"] == code), None)
 
     if not stock_info:
@@ -58,7 +61,11 @@ def get_history(code):
 @api.route("/overview", methods=["GET"])
 def get_overview():
     """获取概览数据"""
-    stocks = config_loader.load_stocks_config().get("stocks", []) if config_loader.load_stocks_config() else []
+    stocks = (
+        config_loader.load_stocks_config().get("stocks", [])
+        if config_loader.load_stocks_config()
+        else []
+    )
     overview = stock_service.fetch_overview(stocks)
 
     return jsonify({"success": True, "data": overview})

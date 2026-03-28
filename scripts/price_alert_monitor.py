@@ -150,17 +150,9 @@ def send_feishu_alert(message: str, alert_type: str = "warning") -> bool:
 
         tenant_token = token_result.get("tenant_access_token")
 
-        # 2. 发送富文本消息（带颜色）
+        # 2. 发送富文本消息
         msg_url = "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id"
         headers = {"Authorization": f"Bearer {tenant_token}", "Content-Type": "application/json"}
-
-        # 根据预警类型设置颜色
-        color_map = {
-            "warning": "orange",  # 橙色 - 一般预警
-            "danger": "red",  # 红色 - 严重预警
-            "info": "blue",  # 蓝色 - 信息
-        }
-        color = color_map.get(alert_type, "orange")
 
         # 富文本格式
         msg_data = {
@@ -280,7 +272,7 @@ def load_alert_state() -> dict:
         try:
             with open(state_file) as f:
                 return json.load(f)
-        except:
+        except Exception:
             pass
     return {"last_alert": None, "alert_count": 0}
 
