@@ -11,9 +11,6 @@ from typing import Optional
 
 import requests
 
-from src.gold_service import GoldService, gold_service
-from src.feishu import FeishuNotifier
-
 # 配置
 PROJECT_ROOT = Path(__file__).parent.parent
 CONFIG_FILE = PROJECT_ROOT / "config" / "gold_config.json"
@@ -214,7 +211,7 @@ def format_gold_message(gold_data: dict, config: dict) -> str:
 {chr(10).join(intl_lines)}
   涨跌额：{change_cny:+.2f} 元/克
   涨跌幅：{change_pct:+.2f}%
-  
+
 📊 今日行情
   昨收：{gold_data.get('prev_close_usd_oz', 0):.2f} 美元/盎司
   最高：{gold_data.get('high_usd_oz', 0):.2f} 美元/盎司
@@ -297,8 +294,6 @@ def main():
     config = load_gold_config()
     if not config:
         return False
-
-    settings = config.get("settings", {})
 
     print(f"[INFO] 监控类型：{config.get('type', 'SHFE_AU2606')}")
 

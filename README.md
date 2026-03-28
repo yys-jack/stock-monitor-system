@@ -134,7 +134,9 @@ stock-monitor-system/
 │       ├── test_stock_service.py
 │       ├── test_gold_service.py
 │       ├── test_predictor.py
-│       └── test_feishu.py
+│       ├── test_feishu.py
+│       ├── test_stock_fetcher.py
+│       └── test_config_loader.py
 │
 ├── ⚙️ 核心模块 (src/)
 │   ├── __init__.py                # 公共导出
@@ -153,21 +155,27 @@ stock-monitor-system/
 │
 ├── 📚 文档
 │   ├── README.md                  # 使用说明
-│   ├── TECH_STACK.md              # 技术栈文档 ⭐
-│   ├── AGILE_DEVELOPMENT.md       # 敏捷开发文档
-│   ├── GIT_WORKFLOW.md            # Git 工作流程
+│   ├── CHANGELOG.md               # 更新日志
+│   ├── CONTRIBUTING.md            # 贡献指南
+│   ├── QUICKSTART.md              # 快速开始
+│   ├── DEPLOYMENT.md              # 部署指南
 │   ├── ROADMAP.md                 # 版本路线图
-│   ├── MEMORY.md                  # 开发规范与教训 ⭐
-│   ├── POSTMORTEM_20260326.md     # Crontab 路径错误复盘
-│   └── PUSH_INVESTIGATION_REPORT.md  # 推送问题调查报告
+│   └── CLAUDE.md                  # 开发规范
 │
 ├── 🛠️ 运维脚本
 │   ├── cron_install.sh            # Cron 统一管理 ⭐
 │   └── verify_push.sh             # 推送验证脚本
 │
-└── 📊 数据目录
-    ├── data/                      # 数据库文件
-    └── logs/                      # 日志文件
+├── 📊 数据目录
+│   ├── data/                      # 数据库文件
+│   └── logs/                      # 日志文件
+│
+└── ⚙️ 项目配置
+    ├── pyproject.toml             # 项目配置 (依赖/格式化/类型检查)
+    ├── requirements.txt           # 依赖列表
+    ├── .pre-commit-config.yaml    # pre-commit 配置
+    ├── .gitignore                 # Git 忽略规则
+    └── Makefile                   # 快捷命令
 ```
 
 ---

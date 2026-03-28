@@ -3,12 +3,10 @@
 导入旧模块将自动重定向到新的 src 模块
 """
 
+import sys
 import warnings
 from pathlib import Path
 from typing import Any, Dict, Optional
-
-# 添加 src 到路径
-import sys
 
 src_path = Path(__file__).parent.parent / "src"
 if str(src_path) not in sys.path:
@@ -21,7 +19,8 @@ warnings.warn(
 )
 
 # 从新模块导入
-from config_loader import ConfigLoader, config_loader
+sys.path.insert(0, str(src_path))
+from config_loader import ConfigLoader, config_loader  # noqa: E402
 
 
 def load_stocks_config() -> Optional[Dict[str, Any]]:

@@ -107,7 +107,7 @@ def format_single_message(stock_info: dict, price_data: dict) -> str:
 💹 实时股价
   当前价：{price_data['current']:.2f} 元 ({change:+.2f}%)
   涨跌额：{price_data['change_amt']:+.2f} 元
-  
+
 📊 今日行情
   昨收：{price_data['prev_close']:.2f} 元
   开盘：{price_data['open']:.2f} 元

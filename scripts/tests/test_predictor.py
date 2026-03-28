@@ -6,12 +6,13 @@
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 # 添加 src 到路径
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 import pandas as pd
+
 from src.predictor import StockPredictor
 
 

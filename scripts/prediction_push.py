@@ -11,9 +11,6 @@ from typing import Dict, Optional
 
 import requests
 
-from src.predictor import StockPredictor
-from src.config_loader import config_loader
-
 # 配置
 PROJECT_ROOT = Path(__file__).parent.parent
 CONFIG_FILE = PROJECT_ROOT / "config" / "feishu_config.json"
@@ -257,7 +254,7 @@ def format_prediction_message(report: dict) -> str:
   趋势：{data['trend']}
   置信度：{confidence_level} ({confidence:.1f}%){history_tag}
   预计涨跌：{data['predicted_change']:+.2f}%
-  
+
 📈 关键价位
   支撑位：¥{data['support_level']:.2f}
   压力位：¥{data['pressure_level']:.2f}
