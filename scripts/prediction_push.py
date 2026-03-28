@@ -121,13 +121,14 @@ def generate_prediction_report(stock_code: str) -> dict:
         if not price_data:
             return {"success": False, "error": "获取股价失败", "data": {}}
 
+        current_price = price_data["current"]
         return {
             "success": True,
             "data": {
                 "stock_code": stock_code,
                 "stock_name": predictor.stock_name,
                 "date": datetime.now().strftime("%Y-%m-%d"),
-                "current_price": price_data["current"],
+                "current_price": current_price,
                 "change_pct": price_data["change_pct"],
                 "volume": price_data.get("volume", 0),
                 # 预测结果
@@ -135,8 +136,9 @@ def generate_prediction_report(stock_code: str) -> dict:
                 "trend": prediction_result.get("trend", "震荡"),
                 "confidence": prediction_result.get("confidence", 0),
                 "predicted_change": prediction_result.get("change_pct", 0),
-                "support_level": prediction_result.get("support", 0),
-                "pressure_level": prediction_result.get("resistance", 0),
+                # 支撑/压力位（预测失败时使用估算值）
+                "support_level": prediction_result.get("support", 0) or current_price * 0.97,
+                "pressure_level": prediction_result.get("pressure_level", 0) or current_price * 1.03,
                 # 历史准确率
                 "historical_accuracy": prediction_result.get("historical_accuracy", 0),
             },
@@ -202,8 +204,8 @@ def generate_prediction_report(stock_code: str) -> dict:
                 "trend": trend,
                 "confidence": confidence,
                 "predicted_change": change_pct * 0.5,
-                "support_level": support,
-                "pressure_level": pressure,
+                "support_level": support if support > 0 else current * 0.97,
+                "pressure_level": pressure if pressure > 0 else current * 1.03,
             },
             "source": "tencent",
         }

@@ -12,6 +12,10 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
+# 支撑位/压力位 fallback 系数
+SUPPORT_FALLBACK_RATIO = 0.97   # 支撑位 fallback 系数
+PRESSURE_FALLBACK_RATIO = 1.03  # 压力位 fallback 系数
+
 
 class StockPredictor:
     """股票预测器类"""
@@ -253,13 +257,23 @@ class StockPredictor:
             trend = "上涨" if predictions[-1] > predictions[0] else "下跌"
             change_pct = ((predictions[-1] - predictions[0]) / predictions[0]) * 100
 
+            # 计算当前价格并添加边界检查
+            current_price = df["收盘"].iloc[-1]
+            if current_price <= 0:
+                print(f"[WARN] 股价异常：{current_price}")
+                support_level = 0
+                pressure_level = 0
+            else:
+                support_level = round(df["收盘"].min() * SUPPORT_FALLBACK_RATIO, 2)
+                pressure_level = round(df["收盘"].max() * PRESSURE_FALLBACK_RATIO, 2)
+
             return {
                 "predictions": [round(p, 2) for p in predictions],
                 "confidence": confidence,
                 "trend": trend,
                 "change_pct": round(change_pct, 2),
-                "support": round(df["收盘"].min(), 2),
-                "resistance": round(df["收盘"].max(), 2),
+                "support": support_level,
+                "pressure_level": pressure_level,
             }
         except Exception as e:
             print(f"[WARN] 预测失败：{e}")
@@ -269,7 +283,7 @@ class StockPredictor:
                 "trend": "未知",
                 "change_pct": 0.0,
                 "support": 0.0,
-                "resistance": 0.0,
+                "pressure_level": 0.0,
             }
 
     def predict(self) -> Dict[str, Any]:
@@ -301,7 +315,7 @@ class StockPredictor:
             "buy_signals": trend_analysis["buy_signals"],
             "sell_signals": trend_analysis["sell_signals"],
             "support": prediction["support"],
-            "resistance": prediction["resistance"],
+            "pressure_level": prediction["pressure_level"],
         }
 
         self._save_prediction_result(
@@ -311,7 +325,7 @@ class StockPredictor:
                 "predicted_confidence": adjusted_confidence,
                 "predicted_change_pct": prediction["change_pct"],
                 "support_level": prediction["support"],
-                "pressure_level": prediction["resistance"],
+                "pressure_level": prediction["pressure_level"],
                 "actual_trend": None,
                 "actual_change_pct": None,
                 "verified": False,
@@ -383,7 +397,7 @@ KDJ 指标:
 置信度：{prediction['confidence']:.2f}%
 
 支撑位：¥{prediction['support']:.2f}
-压力位：¥{prediction['resistance']:.2f}
+压力位：¥{prediction['pressure_level']:.2f}
 
 预测价格:
 """
