@@ -1,4 +1,18 @@
-# 中兴通讯监控系统 - 依赖包
+# 股票监控系统 - 依赖包
 # 安装：pip install -r requirements.txt
 
+# 核心依赖
 requests>=2.28.0
+Flask>=3.0.0
+
+# 数据分析
+pandas>=2.0.0
+numpy>=1.24.0
+akshare>=1.12.0
+
+# 技术指标计算
+ta-lib>=0.4.0
+
+# 工具库
+python-dateutil>=2.8.0
+pytz>=2023.0

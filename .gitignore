@@ -4,6 +4,7 @@ logs/
 
 # Output
 output/
+*.md.tmp
 
 # Python
 __pycache__/
@@ -14,6 +15,10 @@ __pycache__/
 venv/
 ENV/
 env/
+*.egg-info/
+.eggs/
+dist/
+build/
 
 # IDE
 .vscode/
@@ -21,6 +26,8 @@ env/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
 # Config (with secrets)
 config/feishu_config.json
@@ -29,3 +36,22 @@ config/gold_config.json
 
 # Crontab backups
 /tmp/crontab_*.txt
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Type checking
+.mypy_cache/
+.pytype/
+
+# Environment
+.env
+.env.local
+*.local
+
+# OS
+.DS_Store
+Thumbs.db

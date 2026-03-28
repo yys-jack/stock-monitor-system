@@ -5,6 +5,8 @@
 [![GitHub](https://img.shields.io/github/license/yys-jack/stock-monitor-system)](https://github.com/yys-jack/stock-monitor-system)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Status](https://img.shields.io/badge/status-stable-green)](https://github.com/yys-jack/stock-monitor-system)
+[![CI/CD](https://github.com/yys-jack/stock-monitor-system/actions/workflows/ci.yml/badge.svg)](https://github.com/yys-jack/stock-monitor-system/actions/workflows/ci.yml)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/)
 
 ---
 
@@ -24,38 +26,31 @@
 
 ## 🚀 快速开始
 
-### 1. 克隆项目
+### ⚡ 5 分钟上手
+
+详细指南请查看 [QUICKSTART.md](QUICKSTART.md)
 
 ```bash
+# 1. 克隆项目
 git clone https://github.com/yys-jack/stock-monitor-system.git
 cd stock-monitor-system
-```
 
-### 2. 安装依赖
-
-```bash
+# 2. 安装依赖
 pip install -r requirements.txt
-```
+# 或使用 Make
+make install
 
-### 3. 配置飞书推送
+# 3. 配置飞书推送
+cp config/feishu_config.example.json config/feishu_config.json
+vim config/feishu_config.json
 
-复制配置模板并填写你的飞书应用凭证：
+# 4. 配置股票
+cp config/stocks_config.example.json config/stocks_config.json
+vim config/stocks_config.json
 
-```bash
-cp feishu_config.example.json feishu_config.json
-```
-
-编辑 `feishu_config.json`：
-
-```json
-{
-  "feishu": {
-    "enabled": true,
-    "user_id": "YOUR_USER_ID",
-    "app_id": "YOUR_APP_ID",
-    "app_secret": "YOUR_APP_SECRET"
-  }
-}
+# 5. 启动 Web 界面
+python app.py
+# 访问 http://localhost:5000
 ```
 
 **获取飞书凭证：**
@@ -569,6 +564,21 @@ git push origin main
 
 ---
 
+## 📚 更多文档
+
+| 文档 | 说明 |
+|------|------|
+| [⚡ QUICKSTART.md](QUICKSTART.md) | 5 分钟快速上手 |
+| [📦 DEPLOYMENT.md](DEPLOYMENT.md) | 生产环境部署指南 |
+| [📁 PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | 项目结构说明 |
+| [📝 CONTRIBUTING.md](CONTRIBUTING.md) | 代码贡献指南 |
+| [📋 CHANGELOG.md](CHANGELOG.md) | 版本更新日志 |
+| [🗺️ ROADMAP.md](ROADMAP.md) | 版本路线图 |
+| [🛠️ TECH_STACK.md](TECH_STACK.md) | 技术栈说明 |
+| [🧪 TESTING.md](TESTING.md) | 测试指南 |
+
+---
+
 ## 📄 许可证
 
 MIT License
@@ -583,7 +593,7 @@ MIT License
 
 **GitHub:** https://github.com/yys-jack/stock-monitor-system
 
-**最后更新:** 2026-03-11
+**最后更新:** 2026-03-28
 
 ---
 

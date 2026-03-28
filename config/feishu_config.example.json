@@ -1,6 +1,4 @@
 {
-  "version": 1,
-  "updated_at": "2026-03-11",
   "feishu": {
     "enabled": true,
     "user_id": "YOUR_USER_ID",
@@ -8,20 +6,5 @@
     "app_secret": "YOUR_APP_SECRET",
     "retry_times": 3,
     "retry_delay_seconds": 2
-  },
-  "notification_settings": {
-    "stock_push": {
-      "enabled": true,
-      "format": "single"
-    },
-    "price_alert": {
-      "enabled": true,
-      "threshold_up": 5.0,
-      "threshold_down": -5.0
-    },
-    "prediction_push": {
-      "enabled": true,
-      "schedule": "15:30"
-    }
   }
 }
