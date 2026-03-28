@@ -122,13 +122,6 @@ stock-monitor-system/
 │       ├── routes/                # 路由模块
 │       │   ├── api.py             # API 路由 (/api/*)
 │       │   └── views.py           # 页面路由 (/)
-│       ├── services/              # 业务服务层
-│       │   ├── stock_service.py   # 股票服务
-│       │   ├── gold_service.py    # 黄金服务
-│       │   └── predictor.py       # 预测服务
-│       ├── utils/                 # 工具函数
-│       │   ├── config_loader.py   # 配置加载
-│       │   └── feishu.py          # 飞书推送
 │       └── templates/             # 模板文件
 │           └── index.html         # Web 界面
 │
@@ -137,7 +130,20 @@ stock-monitor-system/
 │   ├── gold_monitor.py            # 黄金价格监控
 │   ├── price_alert_monitor.py     # 股价异常预警
 │   ├── prediction_push.py         # 预测推送
-│   └── stock_predictor.py         # 股票预测器（旧版）
+│   └── tests/                     # 单元测试
+│       ├── test_stock_service.py
+│       ├── test_gold_service.py
+│       ├── test_predictor.py
+│       └── test_feishu.py
+│
+├── ⚙️ 核心模块 (src/)
+│   ├── __init__.py                # 公共导出
+│   ├── stock_service.py           # 股票服务 ⭐
+│   ├── gold_service.py            # 黄金服务
+│   ├── predictor.py               # 股票预测器
+│   ├── feishu.py                  # 飞书推送
+│   ├── config_loader.py           # 配置加载
+│   └── logging_config.py          # 日志配置
 │
 ├── ⚙️ 配置 (config/)
 │   ├── stocks_config.json         # 股票配置

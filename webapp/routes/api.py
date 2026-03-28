@@ -3,16 +3,10 @@
 API 路由模块
 """
 
-import sys
 from datetime import datetime
 from pathlib import Path
 
 from flask import Blueprint, jsonify, request
-
-# 添加 src 到路径
-src_path = Path(__file__).parent.parent.parent / "src"
-if str(src_path) not in sys.path:
-    sys.path.insert(0, str(src_path))
 
 from src.config_loader import config_loader
 from src.predictor import StockPredictor
