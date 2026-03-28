@@ -50,6 +50,14 @@ class StockPredictor:
     def _save_prediction_result(self, prediction_data: Dict[str, Any]) -> None:
         """保存预测结果到历史记录"""
         try:
+            # 跳过支撑位和压力位都为 0 的无效记录
+            support_level = prediction_data.get("support_level", 0)
+            pressure_level = prediction_data.get("pressure_level", 0)
+            
+            if support_level == 0 and pressure_level == 0:
+                print(f"[WARN] 支撑位/压力位为 0，跳过保存：{self.stock_name}({self.stock_code})")
+                return
+
             self.history_file.parent.mkdir(parents=True, exist_ok=True)
 
             prediction_data["predicted_at"] = datetime.now().isoformat()
