@@ -28,8 +28,6 @@
 
 ### ⚡ 5 分钟上手
 
-详细指南请查看 [QUICKSTART.md](QUICKSTART.md)
-
 ```bash
 # 1. 克隆项目
 git clone https://github.com/yys-jack/stock-monitor-system.git
@@ -49,8 +47,8 @@ cp config/stocks_config.example.json config/stocks_config.json
 vim config/stocks_config.json
 
 # 5. 启动 Web 界面
-python app.py
-# 访问 http://localhost:5000
+uvicorn app.main:app --reload
+# 访问 http://localhost:8000
 ```
 
 **获取飞书凭证：**
@@ -88,10 +86,11 @@ python app.py
 
 ### 5. 启动服务
 
-#### 方式 A: Web 界面（推荐）⭐
+#### 方式 A: Web 界面（FastAPI，推荐）⭐
 ```bash
-python3 app.py
-# 访问 http://localhost:5000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# 访问 http://localhost:8000
+# API 文档：http://localhost:8000/docs
 ```
 
 #### 方式 B: 多股票监控（命令行）
@@ -115,37 +114,35 @@ python3 scripts/gold_monitor.py
 
 ```
 stock-monitor-system/
-├── 🌐 Web 应用 (Flask)
-│   ├── app.py                     # 应用入口 ⭐
-│   └── webapp/                    # Flask 应用包
-│       ├── __init__.py
-│       ├── routes/                # 路由模块
-│       │   ├── api.py             # API 路由 (/api/*)
-│       │   └── views.py           # 页面路由 (/)
-│       └── templates/             # 模板文件
-│           └── index.html         # Web 界面
+├── 🌐 FastAPI 应用 (app/)
+│   ├── main.py                    # 应用入口 ⭐
+│   ├── api/                       # API 路由
+│   │   ├── api.py                 # API 端点 (/api/*)
+│   │   └── views.py               # 页面路由 (/)
+│   ├── core/                      # 核心配置
+│   │   ├── config.py              # 应用配置
+│   │   └── middleware.py          # 中间件
+│   ├── models/                    # Pydantic 模型
+│   │   └── schemas.py             # 数据模型
+│   ├── services/                  # 业务逻辑
+│   └── templates/                 # HTML 模板
 │
 ├── 📄 监控脚本 (scripts/)
 │   ├── multi_stocks_monitor.py    # 多股票监控
 │   ├── gold_monitor.py            # 黄金价格监控
 │   ├── price_alert_monitor.py     # 股价异常预警
 │   ├── prediction_push.py         # 预测推送
+│   ├── logging_config.py          # 日志配置
+│   ├── config_loader.py           # 配置加载器
 │   └── tests/                     # 单元测试
-│       ├── test_stock_service.py
-│       ├── test_gold_service.py
-│       ├── test_predictor.py
-│       ├── test_feishu.py
-│       ├── test_stock_fetcher.py
-│       └── test_config_loader.py
 │
-├── ⚙️ 核心模块 (src/)
-│   ├── __init__.py                # 公共导出
+├── ⚙️ 共享服务 (src/)
+│   ├── __init__.py
 │   ├── stock_service.py           # 股票服务 ⭐
 │   ├── gold_service.py            # 黄金服务
 │   ├── predictor.py               # 股票预测器
 │   ├── feishu.py                  # 飞书推送
-│   ├── config_loader.py           # 配置加载
-│   └── logging_config.py          # 日志配置
+│   └── utils/                     # 工具函数
 │
 ├── ⚙️ 配置 (config/)
 │   ├── stocks_config.json         # 股票配置
@@ -157,14 +154,12 @@ stock-monitor-system/
 │   ├── README.md                  # 使用说明
 │   ├── CHANGELOG.md               # 更新日志
 │   ├── CONTRIBUTING.md            # 贡献指南
-│   ├── QUICKSTART.md              # 快速开始
 │   ├── DEPLOYMENT.md              # 部署指南
 │   ├── ROADMAP.md                 # 版本路线图
 │   └── CLAUDE.md                  # 开发规范
 │
 ├── 🛠️ 运维脚本
-│   ├── cron_install.sh            # Cron 统一管理 ⭐
-│   └── verify_push.sh             # 推送验证脚本
+│   └── cron_install.sh            # Cron 统一管理 ⭐
 │
 ├── 📊 数据目录
 │   ├── data/                      # 数据库文件
@@ -300,15 +295,16 @@ python3 gold_monitor.py
 
 **安装 Cron：**
 ```bash
-./install_alert_cron.sh install
+./cron_install.sh alert
 ```
 
 **命令：**
 ```bash
-./install_alert_cron.sh install    # 安装定时任务
-./install_alert_cron.sh status     # 查看状态
-./install_alert_cron.sh test       # 测试执行
-./install_alert_cron.sh uninstall  # 卸载任务
+./cron_install.sh alert    # 安装股价预警
+./cron_install.sh status   # 查看状态
+./cron_install.sh stocks   # 安装股票推送
+./cron_install.sh gold     # 安装黄金监控
+./cron_install.sh uninstall  # 卸载所有任务
 ```
 
 ---
@@ -339,7 +335,7 @@ python3 prediction_push.py
 
 ---
 
-### 4️⃣ Web 界面 (`web_server.py`)
+### 4️⃣ Web 界面 (`app/main.py`)
 
 **功能：** 浏览器访问的股票监控面板
 
@@ -353,10 +349,10 @@ python3 prediction_push.py
 
 **启动：**
 ```bash
-python3 web_server.py
+uvicorn app.main:app --reload
 ```
 
-**访问：** http://localhost:5000
+**访问：** http://localhost:8000
 
 **API 接口：**
 | 接口 | 方法 | 说明 |
@@ -477,8 +473,9 @@ crontab -e
 ## 🛠️ 常用命令
 
 ```bash
-# 🌐 Web 服务
-python3 app.py                        # 启动 Web 界面
+# 🌐 Web 服务 (FastAPI)
+uvicorn app.main:app --reload             # 启动 Web 界面 (http://localhost:8000)
+uvicorn app.main:app --port 8000          # 生产模式
 
 # 📄 监控脚本
 python3 scripts/multi_stocks_monitor.py   # 多股票监控
@@ -490,6 +487,9 @@ python3 scripts/price_alert_monitor.py    # 股价预警
 ./cron_install.sh install             # 安装所有任务
 ./cron_install.sh status              # 查看状态
 ./cron_install.sh uninstall           # 卸载任务
+./cron_install.sh stocks              # 只安装股票推送
+./cron_install.sh gold                # 只安装黄金监控
+./cron_install.sh alert               # 只安装股价预警
 
 # 📊 日志查看
 tail -f logs/push_cron.log            # 股票推送日志
@@ -582,12 +582,11 @@ git push origin main
 
 | 文档 | 说明 |
 |------|------|
-| [⚡ QUICKSTART.md](QUICKSTART.md) | 5 分钟快速上手 |
 | [📦 DEPLOYMENT.md](DEPLOYMENT.md) | 部署指南 |
-| [📁 PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | 项目结构 |
 | [📝 CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
 | [📋 CHANGELOG.md](CHANGELOG.md) | 更新日志 |
 | [🗺️ ROADMAP.md](ROADMAP.md) | 版本路线图 |
+| [📋 CLAUDE.md](CLAUDE.md) | 开发规范 |
 
 ---
 
