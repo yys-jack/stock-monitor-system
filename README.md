@@ -586,7 +586,7 @@ git push origin main
 | [📝 CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
 | [📋 CHANGELOG.md](CHANGELOG.md) | 更新日志 |
 | [🗺️ ROADMAP.md](ROADMAP.md) | 版本路线图 |
-| [📋 CLAUDE.md](CLAUDE.md) | 开发规范 |
+| [📋 CLAUDE.md](.claude/CLAUDE.md) | 开发规范 |
 
 ---
 
