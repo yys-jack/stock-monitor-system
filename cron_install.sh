@@ -41,12 +41,9 @@ print_blue() {
 
 # ==================== Cron 任务定义 ====================
 
-# 股票价格推送（交易时间每 30 分钟）
-STOCKS_CRON="# 股票价格推送 - 交易时间每 30 分钟
-30 9-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
-0 10-11 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
-0,30 13-14 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1
-0 15 * * 1-5 /bin/bash -c 'cd $SCRIPT_DIR && source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1"
+# 股票价格推送（周一至周五 9:30）
+STOCKS_CRON="# 股票价格推送 - 周一至周五 9:30 (仅早上开盘时推送一次)
+30 9 * * 1-5 /bin/bash -c 'source venv/bin/activate && python3 $SCRIPT_DIR/scripts/multi_stocks_monitor.py' >> $SCRIPT_DIR/logs/push_cron.log 2>&1"
 
 # 黄金价格监控（交易时间每小时）
 GOLD_CRON="# 黄金价格推送 - 交易时间每小时
