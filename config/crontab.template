@@ -36,7 +36,8 @@
 30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
 
 # 股票价格推送 - 周一至周五 A 股交易时间每半小时 (9:30-11:30, 13:00-15:00)
-30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+30 9 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+0,30 10-11 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 0,30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 0 15 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 ```
