@@ -11,31 +11,36 @@ from typing import Optional
 
 import requests
 
+# 导入统一的飞书推送模块
+from src.feishu import notifier
+
 # 配置
 PROJECT_ROOT = Path(__file__).parent.parent
 CONFIG_FILE = PROJECT_ROOT / "config" / "gold_config.json"
-FEISHU_CONFIG_FILE = PROJECT_ROOT / "config" / "feishu_config.json"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 
 
-def load_feishu_config() -> dict:
-    """加载飞书配置文件"""
-    if not FEISHU_CONFIG_FILE.exists():
-        return {
-            "enabled": False,
-            "user_id": "",
-            "app_id": "",
-            "app_secret": "",
-            "retry_times": 3,
-            "retry_delay": 2,
-        }
+def _init_feishu_notifier():
+    """初始化飞书 notifier 配置"""
+    feishu_config_file = PROJECT_ROOT / "config" / "feishu_config.json"
+    if not feishu_config_file.exists():
+        return
 
-    with open(FEISHU_CONFIG_FILE, encoding="utf-8") as f:
+    with open(feishu_config_file, encoding="utf-8") as f:
         config = json.load(f)
-        return config.get("feishu", {})
+        feishu_cfg = config.get("feishu", {})
+
+    if feishu_cfg:
+        notifier.enabled = feishu_cfg.get("enabled", False)
+        notifier.user_id = feishu_cfg.get("user_id", "")
+        notifier.app_id = feishu_cfg.get("app_id", "")
+        notifier.app_secret = feishu_cfg.get("app_secret", "")
+        notifier.retry_times = feishu_cfg.get("retry_times", 3)
+        notifier.retry_delay = feishu_cfg.get("retry_delay_seconds", 2)
 
 
-FEISHU_CONFIG = load_feishu_config()
+# 初始化飞书 notifier
+_init_feishu_notifier()
 
 
 def load_gold_config() -> dict:
@@ -222,67 +227,10 @@ def format_gold_message(gold_data: dict, config: dict) -> str:
 
 
 def send_feishu_message(message: str, retry_times: int = None) -> bool:
-    """发送飞书消息（带重试机制）"""
-    if not FEISHU_CONFIG.get("enabled"):
-        print("[INFO] 飞书推送未启用")
-        return False
-
-    if retry_times is None:
-        retry_times = FEISHU_CONFIG.get("retry_times", 3)
-
-    retry_delay = FEISHU_CONFIG.get("retry_delay", 2)
-
-    for attempt in range(1, retry_times + 1):
-        try:
-            if attempt > 1:
-                print(f"[INFO] 重试推送 (第 {attempt}/{retry_times} 次)...")
-                import time
-
-                time.sleep(retry_delay)
-
-            # 1. 获取 tenant_access_token
-            token_url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
-            token_data = {
-                "app_id": FEISHU_CONFIG["app_id"],
-                "app_secret": FEISHU_CONFIG["app_secret"],
-            }
-            token_resp = requests.post(token_url, json=token_data, timeout=10)
-            if token_resp.status_code != 200:
-                continue
-
-            token_result = token_resp.json()
-            if token_result.get("code") != 0:
-                continue
-
-            tenant_token = token_result.get("tenant_access_token")
-
-            # 2. 发送消息
-            msg_url = "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id"
-            headers = {
-                "Authorization": f"Bearer {tenant_token}",
-                "Content-Type": "application/json",
-            }
-            msg_data = {
-                "receive_id": FEISHU_CONFIG["user_id"],
-                "msg_type": "text",
-                "content": json.dumps({"text": message}),
-            }
-
-            msg_resp = requests.post(msg_url, headers=headers, json=msg_data, timeout=10)
-            if msg_resp.status_code == 200:
-                result = msg_resp.json()
-                if result.get("code") == 0:
-                    print("[INFO] ✅ 飞书推送成功！")
-                    return True
-
-        except Exception as e:
-            print(f"[ERROR] 飞书推送异常 (第 {attempt} 次): {e}")
-
-        if attempt < retry_times:
-            print(f"[INFO] 等待 {retry_delay} 秒后重试...")
-
-    print(f"[ERROR] ❌ 飞书推送失败，已重试 {retry_times} 次")
-    return False
+    """发送飞书消息（使用统一的 src.feishu 模块）"""
+    if retry_times is not None:
+        notifier.retry_times = retry_times
+    return notifier.send_text_message(message)
 
 
 def main():
@@ -327,7 +275,7 @@ def main():
     print(f"[INFO] 消息已写入：{output_file}")
 
     # 飞书推送
-    if FEISHU_CONFIG.get("enabled"):
+    if notifier.enabled:
         print("[INFO] 发送飞书消息...")
         send_feishu_message(message)
 

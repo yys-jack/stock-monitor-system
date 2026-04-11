@@ -7,7 +7,7 @@
          ↓
     API Router (app/api/api.py)
          ↓
-    Service Layer (src/*.py, app/services/*.py)
+    Service Layer (src/*.py)     ← 统一服务层
          ↓
     外部 API (腾讯财经，AkShare, 飞书)
 ```
@@ -18,21 +18,26 @@
 stock-monitor-system/
 ├── app/                      # FastAPI 应用
 │   ├── main.py               # 应用入口
-│   ├── api/                  # API 路由
+│   ├── api/                  # API 路由（拆分为独立模块）
+│   │   ├── api.py            # 路由聚合
+│   │   ├── stock_routes.py   # 股票行情路由
+│   │   ├── predict_routes.py # 预测路由
+│   │   └── config_routes.py  # 配置管理路由
 │   ├── core/                 # 核心配置
 │   ├── models/               # Pydantic 模型
-│   ├── services/             # 业务逻辑
 │   └── templates/            # HTML 模板
 │
-├── src/                      # 核心服务模块
+├── src/                      # 核心服务模块（唯一服务层）
 │   ├── stock_service.py      # 股票服务
 │   ├── gold_service.py       # 黄金服务
 │   ├── predictor.py          # 股票预测器
 │   ├── feishu.py             # 飞书推送
 │   └── trading/              # 量化交易模拟盘
 │
-├── scripts/                  # 监控脚本
+├── scripts/                  # 监控脚本（使用 src/ 服务）
 ├── config/                   # 配置文件
+├── archive/                  # 归档代码
+│   └── webapp-old/           # 旧 Flask 应用
 └── docs/                     # 文档
 ```
 
@@ -46,8 +51,8 @@ stock-monitor-system/
 
 ### 服务层设计
 
-- `src/` 目录包含可复用的核心服务
-- `app/services/` 包含 FastAPI 特定的业务逻辑封装
+- `src/` 目录包含可复用的核心服务（唯一服务层）
+- `app/services/` 已删除，统一使用 `src/`
 - 所有服务使用依赖注入模式
 
 ### 模拟交易架构

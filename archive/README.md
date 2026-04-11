@@ -16,6 +16,15 @@
 | `FASTAPI_MIGRATION.md` | FastAPI 迁移文档 | 迁移已完成 |
 | `PROJECT_STRUCTURE.md` | 项目结构文档 | 已合并到 README.md |
 | `QUICKSTART.md` | 快速开始指南 | 已合并到 README.md |
+| `webapp/` | 旧 Flask Web 应用 | 已移至 `archive/webapp-old/`，使用 `app/` (FastAPI) |
+
+### 2026-04-11 保守清理重构
+
+| 文件/目录 | 说明 | 替代方案 |
+|----------|------|----------|
+| `webapp/` | 旧 Flask Web 应用 | 已移至 `archive/webapp-old/` |
+| `app/services/` | 重复服务层 | 统一使用 `src/` |
+| `scripts/*/内联 feishu 代码` | 内联飞书推送逻辑 | `src/feishu.py` |
 
 ## 恢复文件
 
