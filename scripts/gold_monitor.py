@@ -12,10 +12,7 @@ from typing import Optional
 import requests
 
 # 导入统一的飞书推送模块
-try:
-    from src.feishu import notifier
-except ImportError:
-    from feishu import notifier
+from src.feishu import notifier
 
 # 配置
 PROJECT_ROOT = Path(__file__).parent.parent

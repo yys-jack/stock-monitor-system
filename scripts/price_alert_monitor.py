@@ -10,7 +10,7 @@ from pathlib import Path
 
 import requests
 
-from src.feishu import notifier
+from src.feishu import notifier, send_post
 
 # ==================== 配置文件路径 ====================
 
@@ -139,8 +139,6 @@ def send_feishu_alert(message: str, alert_type: str = "warning") -> bool:
     发送飞书预警消息
     alert_type: warning (警告), info (信息), danger (危险)
     """
-    from src.feishu import send_post
-
     # 使用富文本格式发送
     title = "⚠️ 股价异常预警"
     content_list = [
