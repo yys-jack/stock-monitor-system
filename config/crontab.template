@@ -35,12 +35,9 @@
 30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
 30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/gold_monitor.py >> logs/gold_cron.log 2>&1
 
-# 股票价格推送 - 交易时间每 30 分钟 (v5 - 使用 venv 绝对路径，解决 cron 环境问题)
-# 上午：9:30, 10:00, 10:30, 11:00, 11:30
-30 9-11 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
-0 10-11 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
-
-# 下午：13:00, 13:30, 14:00, 14:30, 15:00
+# 股票价格推送 - 周一至周五 A 股交易时间每半小时 (9:30-11:30, 13:00-15:00)
+30 9 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
+0,30 10-11 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 0,30 13-14 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 0 15 * * 1-5 cd {{PROJECT_ROOT}} && PYTHONUNBUFFERED=1 ./venv/bin/python3 scripts/multi_stocks_monitor.py >> logs/push_cron.log 2>&1
 ```
@@ -52,7 +49,7 @@
 ### 方式 A: 使用安装脚本（推荐）
 
 ```bash
-cd /home/yy/.openclaw/workspace-partrickstar/stock-monitor-system
+cd /home/yy/PyCharmMiscProject/stock-monitor-system
 ./scripts/install_crontab.sh
 ```
 
@@ -60,7 +57,7 @@ cd /home/yy/.openclaw/workspace-partrickstar/stock-monitor-system
 
 1. 替换模板变量：
 ```bash
-sed 's|{{PROJECT_ROOT}}|/home/yy/.openclaw/workspace-partrickstar/stock-monitor-system|g' config/crontab.template > /tmp/crontab_install.txt
+sed 's|{{PROJECT_ROOT}}|/home/yy/PyCharmMiscProject/stock-monitor-system|g' config/crontab.template > /tmp/crontab_install.txt
 ```
 
 2. 查看确认：
