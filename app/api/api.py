@@ -25,7 +25,7 @@ from app.models.schemas import (
     ToggleResponse,
     MessageResponse,
 )
-from app.services import config_loader, stock_service
+from src import config_loader, stock_service
 from src.predictor import StockPredictor
 
 router = APIRouter(prefix="/api", tags=["API"])

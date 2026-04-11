@@ -11,7 +11,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from app.services import config_loader
+from src import config_loader
 
 router = APIRouter(tags=["Views"])
 
