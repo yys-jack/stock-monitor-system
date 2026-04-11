@@ -16,6 +16,7 @@
 | `FASTAPI_MIGRATION.md` | FastAPI 迁移文档 | 迁移已完成 |
 | `PROJECT_STRUCTURE.md` | 项目结构文档 | 已合并到 README.md |
 | `QUICKSTART.md` | 快速开始指南 | 已合并到 README.md |
+| `webapp/` | 旧 Flask Web 应用 | 已移至 `archive/webapp-old/`，使用 `app/` (FastAPI) |
 
 ## 恢复文件
 
