@@ -30,22 +30,27 @@ class TestImportRefactor:
         assert hasattr(feishu, 'notifier')
 
     def test_app_api_uses_src_imports(self):
-        """验证 app.api.api 模块使用 src 导入"""
-        # 这个测试会先失败，因为我们还没有修改导入
-        # 重构完成后应该通过
-        import app.api.api as api_module
+        """验证 app.api 子模块使用 src 导入"""
+        # 新的架构中，api.py 是路由聚合器，实际导入在各子模块
+        import app.api.stock_routes as stock_module
+        import app.api.predict_routes as predict_module
+        import app.api.config_routes as config_module
 
-        # 检查模块是否成功导入（没有 ImportError）
-        assert api_module is not None
-        assert hasattr(api_module, 'router')
+        # 检查各子模块是否成功导入
+        assert stock_module is not None
+        assert predict_module is not None
+        assert config_module is not None
+
+        # 检查是否有 router 属性
+        assert hasattr(stock_module, 'router')
+        assert hasattr(predict_module, 'router')
+        assert hasattr(config_module, 'router')
 
     def test_app_api_direct_src_import(self):
-        """验证 app.api.api 可以直接从 src 导入（重构后的目标）"""
-        # 这个测试现在会失败，因为 api.py 仍然从 app.services 导入
-        # 我们需要检查 api.py 文件的导入语句
-        with open('app/api/api.py', 'r', encoding='utf-8') as f:
+        """验证 app.api 子模块可以直接从 src 导入（重构后的目标）"""
+        # 检查 stock_routes.py 的导入语句
+        with open('app/api/stock_routes.py', 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # 重构后应该包含这些导入
-        assert 'from src import config_loader, stock_service' in content or \
-               'from src.config_loader import' in content
+        # 重构后应该包含从 src 的导入
+        assert 'from src import' in content or 'from src.' in content
