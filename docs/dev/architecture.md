@@ -51,8 +51,8 @@ stock-monitor-system/
 
 ### 服务层设计
 
-- `src/` 目录包含可复用的核心服务
-- `app/services/` 包含 FastAPI 特定的业务逻辑封装
+- `src/` 目录包含可复用的核心服务（唯一服务层）
+- `app/services/` 已删除，统一使用 `src/`
 - 所有服务使用依赖注入模式
 
 ### 模拟交易架构
