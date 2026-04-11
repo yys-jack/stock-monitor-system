@@ -10,6 +10,8 @@ from pathlib import Path
 
 import requests
 
+from src.feishu import notifier
+
 # ==================== 配置文件路径 ====================
 
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -52,6 +54,14 @@ def load_stock_config() -> dict:
 stocks_config = load_stock_config()
 feishu_config = load_feishu_config()
 
+# 初始化 notifier 配置
+_feishu_cfg = feishu_config
+if _feishu_cfg:
+    notifier.enabled = _feishu_cfg.get("enabled", False)
+    notifier.user_id = _feishu_cfg.get("user_id", "")
+    notifier.app_id = _feishu_cfg.get("app_id", "")
+    notifier.app_secret = _feishu_cfg.get("app_secret", "")
+
 # 获取第一只启用的股票
 enabled_stocks = [s for s in stocks_config.get("stocks", []) if s.get("enabled", True)]
 stock_info = (
@@ -68,8 +78,6 @@ CONFIG = {
     # 预警阈值（百分比）
     "threshold_up": settings.get("alert_threshold_up", 5.0),
     "threshold_down": settings.get("alert_threshold_down", -5.0),
-    # 飞书配置
-    "feishu": feishu_config,
     # 数据目录
     "data_dir": Path(__file__).parent / "data",
 }
@@ -131,67 +139,21 @@ def send_feishu_alert(message: str, alert_type: str = "warning") -> bool:
     发送飞书预警消息
     alert_type: warning (警告), info (信息), danger (危险)
     """
-    try:
-        app_id = CONFIG["feishu"]["app_id"]
-        app_secret = CONFIG["feishu"]["app_secret"]
+    from src.feishu import send_post
 
-        # 1. 获取 tenant_access_token
-        token_url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
-        token_data = {"app_id": app_id, "app_secret": app_secret}
-        token_resp = requests.post(token_url, json=token_data, timeout=10)
-        if token_resp.status_code != 200:
-            print(f"[WARN] 获取飞书 token 失败：{token_resp.status_code}")
-            return False
+    # 使用富文本格式发送
+    title = "⚠️ 股价异常预警"
+    content_list = [
+        [{"tag": "text", "text": message}],
+        [
+            {
+                "tag": "text",
+                "text": f"\n预警时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            }
+        ],
+    ]
 
-        token_result = token_resp.json()
-        if token_result.get("code") != 0:
-            print(f"[WARN] 飞书 token 错误：{token_result}")
-            return False
-
-        tenant_token = token_result.get("tenant_access_token")
-
-        # 2. 发送富文本消息
-        msg_url = "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id"
-        headers = {"Authorization": f"Bearer {tenant_token}", "Content-Type": "application/json"}
-
-        # 富文本格式
-        msg_data = {
-            "receive_id": CONFIG["feishu"]["user_id"],
-            "msg_type": "post",
-            "content": json.dumps(
-                {
-                    "zh_cn": {
-                        "title": "⚠️ 股价异常预警",
-                        "content": [
-                            [{"tag": "text", "text": message}],
-                            [
-                                {
-                                    "tag": "text",
-                                    "text": f"\n预警时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                                }
-                            ],
-                        ],
-                    }
-                }
-            ),
-        }
-
-        msg_resp = requests.post(msg_url, headers=headers, json=msg_data, timeout=10)
-        if msg_resp.status_code == 200:
-            result = msg_resp.json()
-            if result.get("code") == 0:
-                print("[INFO] ✅ 飞书预警推送成功！")
-                return True
-            else:
-                print(f"[WARN] 飞书发送失败：{result}")
-        else:
-            print(f"[WARN] 飞书 API 错误：{msg_resp.status_code}")
-
-        return False
-
-    except Exception as e:
-        print(f"[ERROR] 飞书推送异常：{e}")
-        return False
+    return send_post(title, content_list)
 
 
 # ==================== 预警逻辑 ====================
@@ -320,7 +282,7 @@ def main():
                 return True
 
         # 发送飞书预警
-        if CONFIG["feishu"].get("enabled"):
+        if notifier.enabled:
             print("[INFO] 正在发送飞书预警...")
             if send_feishu_alert(message, alert_type):
                 print("[INFO] ✅ 预警推送成功！")
