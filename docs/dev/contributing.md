@@ -59,7 +59,7 @@ git push origin feature/your-feature-name
 - 遵循 PEP 8
 - 使用 Black 格式化
 - 使用 Ruff 检查
-- 添加类型提示
+- 使用类型提示
 
 ```bash
 black scripts/ webapp/
@@ -86,6 +86,46 @@ make test
 - [ ] 代码通过检查
 - [ ] 添加了测试
 - [ ] 更新了文档
+
+---
+
+## 开发规范
+
+详见：[CLAUDE.md](../../.claude/CLAUDE.md)
+
+### Git 工作流
+
+```bash
+# 1. 创建分支
+git checkout -b feature/xxx
+
+# 2. 开发 + 测试
+# 编写代码 → 运行测试 → 通过
+
+# 3. 提交
+git add .
+git commit -m "feat: 描述"
+git push -u origin feature/xxx
+
+# 4. PR 审查
+# GitHub 创建 Pull Request
+
+# 5. 合并
+# 审查通过后合并到 main
+```
+
+### Commit 规范
+
+格式：`<type>: <description>`
+
+| 类型 | 说明 |
+|------|------|
+| `feat:` | 新功能 |
+| `fix:` | Bug 修复 |
+| `docs:` | 文档更新 |
+| `refactor:` | 重构 |
+| `test:` | 测试 |
+| `chore:` | 配置/工具 |
 
 ---
 
